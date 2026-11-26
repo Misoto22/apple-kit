@@ -34,6 +34,7 @@ struct ColorPairTests {
     }
 
     #if canImport(UIKit)
+    @MainActor
     @Test func uiColorFollowsTheTraits() {
         let color = UIColor(ColorPair(light: 0xFFFFFF, dark: 0x000000))
         var red: CGFloat = -1
