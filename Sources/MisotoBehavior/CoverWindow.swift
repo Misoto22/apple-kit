@@ -12,13 +12,70 @@ import UIKit
 /// It decides only how the window goes up and down. When it shows, and what it draws, stay the app's.
 @MainActor
 public final class CoverWindow {
+    /// How the window treats the app underneath. ``privacyCover`` (the default) is kioku-ios's; ``lock`` is kura-ios's.
+    public struct Options: Sendable {
+        /// Where the keyboard goes back to when the cover lifts.
+        public enum KeyboardHandBack: Sendable {
+            /// Only when the cover holds it: to the window that had it, else the first visible normal-level window.
+            case whenCoverIsKey
+            /// Always: to the window that had it, or the scene's first window when none did.
+            case always
+        }
+
+        /// `accessibilityViewIsModal` on the cover, on top of hiding the app's windows from VoiceOver.
+        public var isModal: Bool
+        /// Ends editing in the app's windows when the cover takes the keyboard. Off keeps the focused field, so the
+        /// keyboard comes back to it when the cover lifts.
+        public var endsEditingBelow: Bool
+        /// Posts `.screenChanged` with the cover's view when it takes the keyboard.
+        public var announcesOnShow: Bool
+        /// Posts `.screenChanged` once the cover is down.
+        public var announcesOnHide: Bool
+        public var keyboardHandBack: KeyboardHandBack
+        /// Gives the hosting view a clear background, for a face that does not fill the screen.
+        public var clearBackground: Bool
+
+        public init(
+            isModal: Bool,
+            endsEditingBelow: Bool,
+            announcesOnShow: Bool,
+            announcesOnHide: Bool,
+            keyboardHandBack: KeyboardHandBack,
+            clearBackground: Bool
+        ) {
+            self.isModal = isModal
+            self.endsEditingBelow = endsEditingBelow
+            self.announcesOnShow = announcesOnShow
+            self.announcesOnHide = announcesOnHide
+            self.keyboardHandBack = keyboardHandBack
+            self.clearBackground = clearBackground
+        }
+
+        /// A privacy cover with a relock gate over it (kioku-ios's `PrivacyShield`).
+        public static let privacyCover = Options(
+            isModal: false, endsEditingBelow: true, announcesOnShow: true, announcesOnHide: false,
+            keyboardHandBack: .whenCoverIsKey, clearBackground: true
+        )
+
+        /// A lock that keeps the app's focused field for when it lifts (kura-ios's `LockCover`).
+        public static let lock = Options(
+            isModal: true, endsEditingBelow: false, announcesOnShow: false, announcesOnHide: true,
+            keyboardHandBack: .always, clearBackground: false
+        )
+    }
+
+    public let options: Options
     public private(set) var isShowing = false
     private var window: UIWindow?
+    /// Whether the cover, while it shows, holds the keyboard.
+    private var takesKeyboard = false
     /// The app's key window before the cover took the keyboard.
     private weak var coveredKeyWindow: UIWindow?
     private var backgroundObserver: (any NSObjectProtocol)?
 
-    public init() {}
+    public init(options: Options = .privacyCover) {
+        self.options = options
+    }
 
     /// Whether the window has been built on a scene.
     public var isAttached: Bool { window != nil }
@@ -30,12 +87,12 @@ public final class CoverWindow {
         let window = UIWindow(windowScene: scene)
         window.windowLevel = .alert + 1
         let host = UIHostingController(rootView: root)
-        host.view.backgroundColor = .clear
+        if options.clearBackground { host.view.backgroundColor = .clear }
         window.rootViewController = host
-        window.accessibilityViewIsModal = true
+        window.accessibilityViewIsModal = options.isModal
         window.isHidden = true
         self.window = window
-        if isShowing { raise(takingKeyboard: false) }
+        if isShowing { raise(takingKeyboard: takesKeyboard) }
     }
 
     /// Calls `handler` from UIKit's own background notification for the window's scene, posted inside the move to the
@@ -57,6 +114,7 @@ public final class CoverWindow {
     /// still be half the app. `takingKeyboard` also makes it the key window.
     public func show(takingKeyboard: Bool) {
         isShowing = true
+        takesKeyboard = takingKeyboard
         raise(takingKeyboard: takingKeyboard)
     }
 
@@ -67,16 +125,21 @@ public final class CoverWindow {
         isShowing = false
         guard let window, !window.isHidden else { return }
         for other in others(than: window) { other.accessibilityElementsHidden = false }
-        if window.isKeyWindow {
+        switch options.keyboardHandBack {
+        case .always:
+            coveredKeyWindow?.makeKey()
+        case .whenCoverIsKey where window.isKeyWindow:
             let app = others(than: window).first { !$0.isHidden && $0.windowLevel == .normal }
             (coveredKeyWindow ?? app)?.makeKey()
+        case .whenCoverIsKey:
+            break
         }
         coveredKeyWindow = nil
         let finish = { [weak self] in
             guard let self, !self.isShowing else { return }
             window.isHidden = true
             window.alpha = 1
-            UIAccessibility.post(notification: .screenChanged, argument: nil)
+            if self.options.announcesOnHide { UIAccessibility.post(notification: .screenChanged, argument: nil) }
             completion?()
         }
         guard let fade else { return finish() }
@@ -106,10 +169,13 @@ public final class CoverWindow {
         CATransaction.flush()
         for other in others { other.accessibilityElementsHidden = true }
         guard takingKeyboard, !window.isKeyWindow else { return }
-        coveredKeyWindow = others.first(where: \.isKeyWindow) ?? others.first
-        others.forEach { $0.endEditing(true) }
+        coveredKeyWindow = others.first(where: \.isKeyWindow)
+            ?? (options.keyboardHandBack == .always ? others.first : nil)
+        if options.endsEditingBelow { others.forEach { $0.endEditing(true) } }
         window.makeKey()
-        UIAccessibility.post(notification: .screenChanged, argument: window.rootViewController?.view)
+        if options.announcesOnShow {
+            UIAccessibility.post(notification: .screenChanged, argument: window.rootViewController?.view)
+        }
     }
 
     private func others(than window: UIWindow) -> [UIWindow] {

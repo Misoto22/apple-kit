@@ -54,13 +54,12 @@ extension EnvironmentValues {
 }
 
 /// A custom panel's ground at `lift`: the system's regular glass, with the app's paper over it by how far the panel is
-/// pulled up. Under Reduce Transparency it is the paper outright.
+/// pulled up. Reduce Transparency is the system glass's own business: it frosts itself.
 @available(iOS 26, macOS 26, *)
 public struct SurfaceMaterialBackground<S: InsettableShape>: View {
     public let lift: CGFloat
     public let shape: S
     @Environment(\.misotoTheme) private var theme
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     public init(lift: CGFloat, in shape: S) {
         self.lift = lift
@@ -68,13 +67,9 @@ public struct SurfaceMaterialBackground<S: InsettableShape>: View {
     }
 
     public var body: some View {
-        if reduceTransparency {
-            shape.fill(theme.paper)
-        } else {
-            ZStack {
-                Color.clear.glassEffect(.regular, in: shape)
-                shape.fill(theme.paper).opacity(SurfaceMaterial.paper(lift: lift))
-            }
+        ZStack {
+            Color.clear.glassEffect(.regular, in: shape)
+            shape.fill(theme.paper).opacity(SurfaceMaterial.paper(lift: lift))
         }
     }
 }
@@ -87,7 +82,6 @@ private struct SurfaceMaterialSheet: ViewModifier {
     let external: Binding<PresentationDetent>?
     let overSheet: Bool
     @Environment(\.misotoTheme) private var theme
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var own: PresentationDetent
     @State private var lift: CGFloat = 0
     @State private var restTop: CGFloat?
@@ -101,7 +95,7 @@ private struct SurfaceMaterialSheet: ViewModifier {
     }
 
     private var selected: Binding<PresentationDetent> { external ?? $own }
-    private var paperOnly: Bool { overSheet || detents == [.large] || reduceTransparency }
+    private var paperOnly: Bool { overSheet || detents == [.large] }
     private var rises: Bool { !paperOnly && detents.contains(.large) }
     private var paper: CGFloat { paperOnly ? 1 : rises ? SurfaceMaterial.paper(lift: lift) : 0 }
 
