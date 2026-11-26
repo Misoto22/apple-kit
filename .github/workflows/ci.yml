@@ -1,5 +1,5 @@
 # Build and test AppleKit on the iOS Simulator and the macOS host. UIKit, BackgroundTasks and Liquid Glass exist only on
-# Apple platforms, so there is no Linux job.
+# Apple platforms, so the package's own job is macOS; the token pipeline (tokens/) is Node and runs on Linux.
 
 name: CI
 
@@ -31,3 +31,18 @@ jobs:
           xcodebuild test -scheme AppleKit-Package \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+
+  tokens:
+    name: Tokens
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tokens
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm test
