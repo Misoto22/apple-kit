@@ -1,0 +1,114 @@
+import Foundation
+@testable import MisotoFoundation
+import Security
+import Testing
+
+/// Records every dictionary, as kioku-ios's RecordingKeychain does.
+final class RecordingKeychain: KeychainItems {
+    var added: [[String: Any]] = []
+    var updated: [(query: [String: Any], attributes: [String: Any])] = []
+    var deleted: [[String: Any]] = []
+    var copied: [[String: Any]] = []
+    var updateStatus: OSStatus = errSecItemNotFound
+    var stored: Data?
+    var rows: [[String: Any]] = []
+
+    func add(_ attributes: [String: Any]) -> OSStatus { added.append(attributes); return errSecSuccess }
+    func copy(_ query: [String: Any]) -> (data: Data?, status: OSStatus) {
+        copied.append(query)
+        return stored.map { ($0, errSecSuccess) } ?? (nil, errSecItemNotFound)
+    }
+    func update(_ query: [String: Any], _ attributes: [String: Any]) -> OSStatus {
+        updated.append((query, attributes)); return updateStatus
+    }
+    func delete(_ query: [String: Any]) -> OSStatus { deleted.append(query); return errSecSuccess }
+    func copyAttributes(_ query: [String: Any]) -> (items: [[String: Any]], status: OSStatus) { (rows, errSecSuccess) }
+}
+
+private func keys(_ dictionary: [String: Any]) -> Set<String> { Set(dictionary.keys) }
+
+struct GenericPasswordTests {
+    @Test func aPlainQueryNamesOnlyClassServiceAndAccount() {
+        let query = GenericPassword(service: "s", account: "a").query
+        #expect(keys(query) == [kSecClass as String, kSecAttrService as String, kSecAttrAccount as String])
+    }
+
+    @Test func aServiceOnlyRowHasNoAccount() {
+        #expect(GenericPassword(service: "s").query[kSecAttrAccount as String] == nil)
+    }
+
+    @Test func setOptionsAppearInTheQuery() {
+        let query = GenericPassword(
+            service: "s", account: "a", accessGroup: "G.group", synchronizable: true, usesDataProtectionKeychain: true
+        ).query
+        #expect(query[kSecAttrAccessGroup as String] as? String == "G.group")
+        #expect((query[kSecAttrSynchronizable as String] as! CFBoolean) == kCFBooleanTrue)
+        #expect(query[kSecUseDataProtectionKeychain as String] as? Bool == true)
+    }
+
+    @Test func upsertAddsWithTheClassWhenThereIsNoRow() {
+        let keychain = RecordingKeychain()
+        let status = GenericPassword(service: "s", account: "a")
+            .upsert(Data("v".utf8), accessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly, updatesAccessibility: true, in: keychain)
+        #expect(status == errSecSuccess)
+        #expect(keys(keychain.updated[0].attributes) == [kSecValueData as String, kSecAttrAccessible as String])
+        let insert = keychain.added[0]
+        #expect(keys(insert) == [
+            kSecClass as String, kSecAttrService as String, kSecAttrAccount as String,
+            kSecValueData as String, kSecAttrAccessible as String,
+        ])
+    }
+
+    @Test func upsertCanKeepAnExistingRowsClass() {
+        let keychain = RecordingKeychain()
+        keychain.updateStatus = errSecSuccess
+        GenericPassword(service: "s", account: "a", synchronizable: true)
+            .upsert(Data("v".utf8), accessible: kSecAttrAccessibleAfterFirstUnlock, updatesAccessibility: false, in: keychain)
+        #expect(keys(keychain.updated[0].attributes) == [kSecValueData as String])
+        #expect(keychain.added.isEmpty)
+    }
+
+    @Test func upsertPassesExtraAttributesOnlyToANewRow() {
+        let keychain = RecordingKeychain()
+        GenericPassword(service: "s", account: "a").upsert(
+            Data(), accessible: kSecAttrAccessibleAfterFirstUnlock, updatesAccessibility: true,
+            extraOnAdd: [kSecAttrLabel as String: "L"], in: keychain
+        )
+        #expect(keychain.updated[0].attributes[kSecAttrLabel as String] == nil)
+        #expect(keychain.added[0][kSecAttrLabel as String] as? String == "L")
+    }
+
+    @Test func replaceDeletesThenAdds() {
+        let keychain = RecordingKeychain()
+        GenericPassword(service: "s").replace(Data("v".utf8), accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly, in: keychain)
+        #expect(keychain.deleted.count == 1)
+        #expect(keychain.added[0][kSecAttrAccessible as String] as! CFString == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
+    }
+
+    @Test func readAsksForOneRowsData() {
+        let keychain = RecordingKeychain()
+        keychain.stored = Data("hello".utf8)
+        let item = GenericPassword(service: "s", account: "a")
+        #expect(item.readString(in: keychain) == "hello")
+        #expect(keychain.copied[0][kSecReturnData as String] as? Bool == true)
+        #expect(keychain.copied[0][kSecMatchLimit as String] as! CFString == kSecMatchLimitOne)
+    }
+
+    @Test func aMissingRowReadsNil() {
+        #expect(GenericPassword(service: "s", account: "a").readString(in: RecordingKeychain()) == nil)
+    }
+
+    @Test func servicesFiltersByPrefix() {
+        let keychain = RecordingKeychain()
+        keychain.rows = [
+            [kSecAttrService as String: "app.leaving.1"], [kSecAttrService as String: "app.session"],
+            [kSecAttrService as String: "app.leaving.2"], [:],
+        ]
+        #expect(GenericPassword.services(withPrefix: "app.leaving.", in: keychain) == ["app.leaving.1", "app.leaving.2"])
+    }
+
+    @Test func notFoundCountsAsNothingLeft() {
+        #expect(KeychainStatus.isSuccessOrNotFound(errSecItemNotFound))
+        #expect(!KeychainStatus.isSuccessOrNotFound(errSecInteractionNotAllowed))
+    }
+}

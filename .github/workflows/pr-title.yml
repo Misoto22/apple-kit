@@ -1,0 +1,12 @@
+name: PR title
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  pr-title:
+    uses: Misoto22/ci/.github/workflows/pr-title.yml@3a25c7df20d85291cd9a67f910c9293af1b4b094 # v0.12.0

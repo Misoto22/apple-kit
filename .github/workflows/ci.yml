@@ -1,0 +1,33 @@
+# Build and test AppleKit on the iOS Simulator and the macOS host. UIKit, BackgroundTasks and Liquid Glass exist only on
+# Apple platforms, so there is no Linux job.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Test
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Report the toolchain
+        run: xcodebuild -version && swift --version
+      - name: Test on the macOS host
+        run: swift test
+      - name: Test on the iOS Simulator, warnings as errors
+        run: |
+          xcodebuild test -scheme AppleKit-Package \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES

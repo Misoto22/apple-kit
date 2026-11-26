@@ -1,0 +1,8 @@
+.build/
+.swiftpm/
+*.xcodeproj
+xcuserdata/
+DerivedData/
+node_modules/
+tokens/build/
+__pycache__/
