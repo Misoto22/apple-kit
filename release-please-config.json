@@ -5,14 +5,36 @@
   "include-component-in-tag": false,
   "bump-minor-pre-major": true,
   "changelog-sections": [
-    { "type": "feat", "section": "Features" },
-    { "type": "fix", "section": "Bug Fixes" },
-    { "type": "perf", "section": "Performance" },
-    { "type": "revert", "section": "Reverts" },
-    { "type": "docs", "section": "Documentation", "hidden": false },
-    { "type": "refactor", "section": "Refactoring", "hidden": false }
+    {
+      "type": "feat",
+      "section": "Features"
+    },
+    {
+      "type": "fix",
+      "section": "Bug Fixes"
+    },
+    {
+      "type": "perf",
+      "section": "Performance"
+    },
+    {
+      "type": "revert",
+      "section": "Reverts"
+    },
+    {
+      "type": "docs",
+      "section": "Documentation",
+      "hidden": false
+    },
+    {
+      "type": "refactor",
+      "section": "Refactoring",
+      "hidden": false
+    }
   ],
   "packages": {
-    ".": {}
+    ".": {
+      "release-as": "0.1.0"
+    }
   }
 }
