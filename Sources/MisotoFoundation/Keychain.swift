@@ -64,6 +64,12 @@ public struct SystemKeychain: KeychainItems, Sendable {
 /// synchronizable flag unless the app sets one. An attribute left nil is absent from the query, so a row written before
 /// an app adopted this is the same row.
 public struct GenericPassword: Sendable, Hashable {
+    /// Access policy for a replaced Keychain row: either an explicit `kSecAttrAccessible` class or a `SecAccessControl`.
+    public enum Access: @unchecked Sendable {
+        case accessible(CFString)
+        case accessControl(SecAccessControl)
+    }
+
     public var service: String
     /// Nil for a row identified by its service alone (revala-ios's sessions).
     public var account: String?
@@ -140,23 +146,33 @@ public struct GenericPassword: Sendable, Hashable {
     }
 
     /// Deletes the row and adds it again whole: for a row whose access control must be set afresh, which `SecItemUpdate`
-    /// cannot change. Pass `accessControl` (which carries its own class) or `accessible`, not both.
+    /// cannot change. Reads the previous value first and attempts to restore it if `add` fails.
     @discardableResult
     public func replace(
         _ data: Data,
-        accessible: CFString? = nil,
-        accessControl: SecAccessControl? = nil,
+        access: Access,
         in keychain: some KeychainItems = SystemKeychain()
     ) -> OSStatus {
-        _ = keychain.delete(query)
+        let previous = read(in: keychain)
+        let deleteStatus = keychain.delete(query)
+        guard KeychainStatus.isSuccessOrNotFound(deleteStatus) else { return deleteStatus }
+
         var insert = query
         insert[kSecValueData as String] = data
-        if let accessControl {
-            insert[kSecAttrAccessControl as String] = accessControl
-        } else if let accessible {
+        switch access {
+        case .accessible(let accessible):
             insert[kSecAttrAccessible as String] = accessible
+        case .accessControl(let accessControl):
+            insert[kSecAttrAccessControl as String] = accessControl
         }
-        return keychain.add(insert)
+
+        let addStatus = keychain.add(insert)
+        if addStatus != errSecSuccess, previous.status == errSecSuccess, let previousData = previous.data {
+            var restore = query
+            restore[kSecValueData as String] = previousData
+            _ = keychain.add(restore)
+        }
+        return addStatus
     }
 
     /// Deletes the row. The status is returned as the Keychain gave it; ``KeychainStatus/isSuccessOrNotFound(_:)`` reads

@@ -1,5 +1,5 @@
-# Build and test AppleKit on the iOS Simulator and the macOS host. UIKit, BackgroundTasks and Liquid Glass exist only on
-# Apple platforms, so the package's own job is macOS; the token pipeline (tokens/) is Node and runs on Linux.
+# Build and test AppleKit on the iOS Simulator, watchOS Simulator, and macOS host.
+# The token pipeline (tokens/) is Node and runs on Linux.
 
 name: CI
 
@@ -31,6 +31,13 @@ jobs:
           xcodebuild test -scheme AppleKit-Package \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+      - name: Build watchOS-compatible products, warnings as errors
+        run: |
+          for scheme in MisotoFoundation MisotoTheme MisotoMotion MisotoLayout; do
+            xcodebuild build -scheme "$scheme" \
+              -destination 'generic/platform=watchOS Simulator' \
+              SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+          done
 
   tokens:
     name: Tokens

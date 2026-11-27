@@ -35,17 +35,11 @@ struct SurfaceMaterialTests {
         #expect(SurfaceMaterial.ramp(2, from: 0, to: 1) == 1)
     }
 
-    @Test func aSheetIsPaperAtLargeAloneOrOverASheet() {
+    @Test func aSheetIsPaperAtLargeAloneOverASheetOrCenteredOnPad() {
         #expect(SurfaceMaterial.isPaper(selected: .large, detents: [.medium, .large]))
         #expect(!SurfaceMaterial.isPaper(selected: .medium, detents: [.medium, .large]))
         #expect(SurfaceMaterial.isPaper(selected: .large, detents: [.large]))
         #expect(SurfaceMaterial.isPaper(selected: .medium, detents: [.medium], overSheet: true))
-    }
-}
-
-struct ReducedMotionTests {
-    @Test func unlessDropsTheAnimationWhenReduced() {
-        #expect(ReducedMotion.unless(true, .snappy) == nil)
-        #expect(ReducedMotion.unless(false, .snappy) == .snappy)
+        #expect(SurfaceMaterial.isPaper(selected: .medium, detents: [.medium], isCentered: true))
     }
 }

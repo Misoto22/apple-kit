@@ -4,25 +4,40 @@ import Security
 import Testing
 
 /// Records every dictionary, as kioku-ios's RecordingKeychain does.
-final class RecordingKeychain: KeychainItems {
+final class LocalRecordingKeychain: KeychainItems {
     var added: [[String: Any]] = []
     var updated: [(query: [String: Any], attributes: [String: Any])] = []
     var deleted: [[String: Any]] = []
     var copied: [[String: Any]] = []
     var updateStatus: OSStatus = errSecItemNotFound
+    var addStatuses: [OSStatus] = []
     var stored: Data?
     var rows: [[String: Any]] = []
 
-    func add(_ attributes: [String: Any]) -> OSStatus { added.append(attributes); return errSecSuccess }
+    func add(_ attributes: [String: Any]) -> OSStatus {
+        added.append(attributes)
+        if !addStatuses.isEmpty { return addStatuses.removeFirst() }
+        return errSecSuccess
+    }
+
     func copy(_ query: [String: Any]) -> (data: Data?, status: OSStatus) {
         copied.append(query)
         return stored.map { ($0, errSecSuccess) } ?? (nil, errSecItemNotFound)
     }
+
     func update(_ query: [String: Any], _ attributes: [String: Any]) -> OSStatus {
-        updated.append((query, attributes)); return updateStatus
+        updated.append((query, attributes))
+        return updateStatus
     }
-    func delete(_ query: [String: Any]) -> OSStatus { deleted.append(query); return errSecSuccess }
-    func copyAttributes(_ query: [String: Any]) -> (items: [[String: Any]], status: OSStatus) { (rows, errSecSuccess) }
+
+    func delete(_ query: [String: Any]) -> OSStatus {
+        deleted.append(query)
+        return errSecSuccess
+    }
+
+    func copyAttributes(_ query: [String: Any]) -> (items: [[String: Any]], status: OSStatus) {
+        (rows, errSecSuccess)
+    }
 }
 
 private func keys(_ dictionary: [String: Any]) -> Set<String> { Set(dictionary.keys) }
@@ -47,7 +62,7 @@ struct GenericPasswordTests {
     }
 
     @Test func upsertAddsWithTheClassWhenThereIsNoRow() {
-        let keychain = RecordingKeychain()
+        let keychain = LocalRecordingKeychain()
         let status = GenericPassword(service: "s", account: "a")
             .upsert(Data("v".utf8), accessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly, updatesAccessibility: true, in: keychain)
         #expect(status == errSecSuccess)
@@ -60,7 +75,7 @@ struct GenericPasswordTests {
     }
 
     @Test func upsertCanKeepAnExistingRowsClass() {
-        let keychain = RecordingKeychain()
+        let keychain = LocalRecordingKeychain()
         keychain.updateStatus = errSecSuccess
         GenericPassword(service: "s", account: "a", synchronizable: true)
             .upsert(Data("v".utf8), accessible: kSecAttrAccessibleAfterFirstUnlock, updatesAccessibility: false, in: keychain)
@@ -69,7 +84,7 @@ struct GenericPasswordTests {
     }
 
     @Test func upsertPassesExtraAttributesOnlyToANewRow() {
-        let keychain = RecordingKeychain()
+        let keychain = LocalRecordingKeychain()
         GenericPassword(service: "s", account: "a").upsert(
             Data(), accessible: kSecAttrAccessibleAfterFirstUnlock, updatesAccessibility: true,
             extraOnAdd: [kSecAttrLabel as String: "L"], in: keychain
@@ -78,15 +93,35 @@ struct GenericPasswordTests {
         #expect(keychain.added[0][kSecAttrLabel as String] as? String == "L")
     }
 
-    @Test func replaceDeletesThenAdds() {
-        let keychain = RecordingKeychain()
-        GenericPassword(service: "s").replace(Data("v".utf8), accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly, in: keychain)
+    @Test func replaceDeletesThenAddsWithExplicitAccess() {
+        let keychain = LocalRecordingKeychain()
+        let status = GenericPassword(service: "s").replace(
+            Data("v".utf8),
+            access: .accessible(kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly),
+            in: keychain
+        )
+        #expect(status == errSecSuccess)
         #expect(keychain.deleted.count == 1)
+        #expect(keychain.added.count == 1)
         #expect(keychain.added[0][kSecAttrAccessible as String] as! CFString == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
     }
 
+    @Test func replaceRestoresPreviousDataWhenAddFails() {
+        let keychain = LocalRecordingKeychain()
+        keychain.stored = Data("old-secret".utf8)
+        keychain.addStatuses = [errSecParam, errSecSuccess]
+        let status = GenericPassword(service: "s").replace(
+            Data("new-secret".utf8),
+            access: .accessible(kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly),
+            in: keychain
+        )
+        #expect(status == errSecParam)
+        #expect(keychain.added.count == 2)
+        #expect(keychain.added[1][kSecValueData as String] as? Data == Data("old-secret".utf8))
+    }
+
     @Test func readAsksForOneRowsData() {
-        let keychain = RecordingKeychain()
+        let keychain = LocalRecordingKeychain()
         keychain.stored = Data("hello".utf8)
         let item = GenericPassword(service: "s", account: "a")
         #expect(item.readString(in: keychain) == "hello")
@@ -95,11 +130,11 @@ struct GenericPasswordTests {
     }
 
     @Test func aMissingRowReadsNil() {
-        #expect(GenericPassword(service: "s", account: "a").readString(in: RecordingKeychain()) == nil)
+        #expect(GenericPassword(service: "s", account: "a").readString(in: LocalRecordingKeychain()) == nil)
     }
 
     @Test func servicesFiltersByPrefix() {
-        let keychain = RecordingKeychain()
+        let keychain = LocalRecordingKeychain()
         keychain.rows = [
             [kSecAttrService as String: "app.leaving.1"], [kSecAttrService as String: "app.session"],
             [kSecAttrService as String: "app.leaving.2"], [:],

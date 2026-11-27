@@ -1,0 +1,54 @@
+{
+  "motion": {
+    "standardCurve": {
+      "$type": "cubicBezier",
+      "$value": [0.4, 0.0, 0.2, 1.0],
+      "$description": "Standard easing curve across Misoto apps (Revala reference)"
+    },
+    "emphasizedCurve": {
+      "$type": "cubicBezier",
+      "$value": [0.16, 1.0, 0.3, 1.0],
+      "$description": "Emphasized arrival curve without overshoot"
+    },
+    "quickDuration": {
+      "$type": "duration",
+      "$value": { "value": 150, "unit": "ms" }
+    },
+    "standardDuration": {
+      "$type": "duration",
+      "$value": { "value": 200, "unit": "ms" }
+    },
+    "slowDuration": {
+      "$type": "duration",
+      "$value": { "value": 300, "unit": "ms" }
+    },
+    "breathDuration": {
+      "$type": "duration",
+      "$value": { "value": 800, "unit": "ms" }
+    },
+    "breathLow": {
+      "$type": "number",
+      "$value": 0.55
+    },
+    "enterOffset": {
+      "$type": "dimension",
+      "$value": { "value": 4, "unit": "pt" }
+    },
+    "enterScale": {
+      "$type": "number",
+      "$value": 0.92
+    },
+    "stagger": {
+      "$type": "duration",
+      "$value": { "value": 60, "unit": "ms" }
+    },
+    "pressScale": {
+      "$type": "number",
+      "$value": 0.96
+    },
+    "pressOpacity": {
+      "$type": "number",
+      "$value": 0.85
+    }
+  }
+}
