@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/Misoto22/apple-kit/compare/v0.1.0...v0.2.0) (2026-11-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* expand AppleKit to 26+ shared design system ([#7](https://github.com/Misoto22/apple-kit/issues/7))
+
+### Features
+
+* expand AppleKit to 26+ shared design system ([#7](https://github.com/Misoto22/apple-kit/issues/7)) ([4af82aa](https://github.com/Misoto22/apple-kit/commit/4af82aa7098e77a46427ecec4e2440773f9a2afd))
+
 ## 0.1.0 (2026-11-27)
 
 
