@@ -52,10 +52,12 @@ extension View {
         modifier(FadeInsteadOfMoving(value: value, reduceMotion: reduceMotion))
     }
 
-    /// A loading placeholder's breath: opacity only, from 1 to `low` and back on the theme's breath curve, looping on its
-    /// own view so nothing else is swept in. Still at `still` under Reduce Motion; at full opacity once `active` is false.
-    public func breathing(while active: Bool = true, low: Double = 0.55, still: Double = 1) -> some View {
-        modifier(Breathing(active: active, low: low, still: still))
+    /// A loading placeholder's breath: opacity only, from 1 down to `low` and back on the theme's breath curve, repeating
+    /// with the descent played backwards (autoreverse), so nothing else is swept in. `delay` offsets a neighbour's breath.
+    /// When `active` turns false it eases back to full opacity on the theme's standard curve, never in one frame. Under
+    /// Reduce Motion it stands at `still`.
+    public func breathing(while active: Bool = true, low: Double = 0.55, still: Double = 1, delay: Double = 0) -> some View {
+        modifier(Breathing(active: active, low: low, still: still, delay: delay))
     }
 }
 
@@ -75,20 +77,28 @@ private struct Breathing: ViewModifier {
     let active: Bool
     let low: Double
     let still: Double
+    let delay: Double
     @ReduceMotion private var reduceMotion
     @Environment(\.misotoTheme) private var theme
+    @State private var isLow = false
 
     func body(content: Content) -> some View {
-        if !active {
-            content
-        } else if reduceMotion {
-            content.opacity(still)
-        } else {
-            content.phaseAnimator([1.0, low]) { view, opacity in
-                view.opacity(opacity)
-            } animation: { _ in
-                theme.motion.breath
-            }
+        // One structure throughout, so turning the breath off eases back rather than rebuilding the content.
+        content
+            .opacity(reduceMotion && active ? still : isLow ? low : 1)
+            .onAppear { breathe(active) }
+            .onChange(of: active) { _, now in breathe(now) }
+            .onChange(of: reduceMotion) { _, _ in breathe(active) }
+            .onDisappear { isLow = false }
+    }
+
+    private func breathe(_ on: Bool) {
+        guard on, !reduceMotion else {
+            // Back to full opacity on the standard curve, which also ends the repeating breath.
+            withAnimation(theme.motion.standard) { isLow = false }
+            return
         }
+        // The delay offsets only the first breath; every cycle after it follows on at once.
+        withAnimation(theme.motion.breath.repeatForever(autoreverses: true).delay(delay)) { isLow = true }
     }
 }

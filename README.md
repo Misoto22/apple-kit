@@ -7,7 +7,7 @@ brand: colours, type, curves and the look of every component stay in the app.
 |---|---|---|
 | `MisotoFoundation` | `GenericPassword` over a `KeychainItems` seam; `BackgroundTaskCompletion` and `BackgroundTasks.register`/`run` (always `using: .main`); `RetryAfter` (no non-finite wait); `AppleLanguages` (the in-app language choice's storage) | kioku-ios, kura-ios, revala-ios, jade |
 | `MisotoTheme` | `RGBA`, `ColorPair` (light, dark and Increase Contrast, resolved off the main thread), `Theme` (the roles a behaviour reads), `MotionSet`, `.misotoTheme(_:)` | every app, at its root |
-| `MisotoBehavior` | `SurfaceMaterial` (Liquid Glass turning to the app's paper with a sheet's lift) and `.surfaceMaterialSheet`; `CoverWindow` (a privacy cover or lock above everything); `.breathing`; `ReducedMotion`, `@ReduceMotion`, `.fadesInsteadOfMoving` | revala-ios, kioku-ios, kura-ios, jade |
+| `MisotoBehavior` | `SurfaceMaterial` (Liquid Glass turning to the app's paper with a sheet's lift) and `.surfaceMaterialSheet`; `CoverWindow` (a privacy cover or lock above everything, `.privacyCover` or `.lock` options); `.breathing`; `ReducedMotion`, `@ReduceMotion`, `.fadesInsteadOfMoving` | revala-ios, kioku-ios, kura-ios, jade |
 
 Platforms: iOS 26, macOS 14 (jade's Mac app). Swift 6 language mode. No dependencies.
 
