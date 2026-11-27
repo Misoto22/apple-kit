@@ -1,28 +1,21 @@
 # 0001. What belongs in AppleKit
 
-Date: 2026-11-27. Status: accepted.
+Date: 2026-11-27. Updated: 2026-11-28. Status: accepted.
 
 ## Context
 
-Four iOS apps, four GitHub organisations, one maintainer. An audit (2026-11-27) found the same infrastructure written two
-to four times: Keychain wrappers in all four, background-task completion in two, the in-app language override in three,
-Retry-After parsing in two, a privacy window above alerts in two, a loading breath in four. Each copy carried its own
-bugs; kioku-ios crashed daily on one of them.
+Four Apple apps (`kioku-ios`, `revala-ios`, `kura-ios`, `jade`), four GitHub organisations, one maintainer. Initially AppleKit restricted itself to foundation and unstyled behaviour. A subsequent full-codebase audit found 19 shared component categories, Liquid Glass sheet mechanics, motion orchestration, and layout primitives duplicated 2 to 4 times across the apps.
 
-Large companies that share code across apps (Uber's Rider/Driver/Eats, Airbnb's module types, Spotify's Encore,
-Microsoft's Fluent UI Apple, Google's Material Components for iOS) agree on two lessons: shared foundations pay off, and a
-shared *visual* component library tends to fight the platform (Material Components for iOS went into maintenance in 2021
-and was archived in 2025, advising the system's own SwiftUI and UIKit components).
+Unlike Material Components for iOS (which failed by replacing platform controls with custom renderers), these four apps share one maintainer and build strictly on top of SwiftUI/UIKit native controls.
 
 ## Decision
 
-A piece moves here only when two apps use it and it can move without a behaviour change in either. It stays in the app
-when only one app has it (jade's CloudKit zone engine, kura's sealed files, revala's map), or when the apps mean different
-things by the same name (kioku's `LoadPhase` is a five-case enum, revala's a generic result with a timeout).
+AppleKit is the shared design-system foundation for the Misoto apps under four strict guardrails:
 
-One repository, three products, layered so the manifest forbids a lower layer importing a higher one.
+1. **Two-app rule**: Structure enters AppleKit only when at least two apps share it. Single-app features (`kura`'s long-press confirm, `revala`'s map pins/mascot, `jade`'s pet and direct-sale Mac Washi controls, `kioku`'s charts/maps) stay in their app.
+2. **Closed named variants (≤ 3)**: Components share structure, state, accessibility, Dynamic Type, tap targets, and localization; visual differences become closed value-type variants (at most 3 per component) in `Theme.Variants`, never arbitrary view closures passed from apps.
+3. **Never wrap unmodified system containers**: `List`, `NavigationStack`, `TabView`, system alerts, and page-level settings skeletons stay in the apps.
+4. **Gallery and snapshot verification**: Shared components are verified across all four brand themes, light/dark, largest Dynamic Type, Increase Contrast, and iPhone/iPad/macOS before adoption.
 
-## Consequences
-
-The package stays small and each type in it has at least two users that test it. An app wanting something new writes it
-locally first.
+One repository, layered products enforced by `Package.swift` so lower layers cannot import higher ones:
+`MisotoFoundation` → `MisotoTheme` / `MisotoMotion` / `MisotoLayout` → `MisotoBehavior` → `MisotoComponents`, plus `MisotoTesting`.

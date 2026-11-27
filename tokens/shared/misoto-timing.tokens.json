@@ -1,0 +1,34 @@
+{
+  "toast": {
+    "shortDuration": {
+      "$type": "duration",
+      "$value": { "value": 3000, "unit": "ms" }
+    },
+    "undoDuration": {
+      "$type": "duration",
+      "$value": { "value": 5000, "unit": "ms" }
+    },
+    "voiceOverDuration": {
+      "$type": "duration",
+      "$value": { "value": 20000, "unit": "ms" }
+    }
+  },
+  "loading": {
+    "placeholderDelay": {
+      "$type": "duration",
+      "$value": { "value": 400, "unit": "ms" }
+    },
+    "minimumDisplay": {
+      "$type": "duration",
+      "$value": { "value": 600, "unit": "ms" }
+    },
+    "slowThreshold": {
+      "$type": "duration",
+      "$value": { "value": 8000, "unit": "ms" }
+    },
+    "timeout": {
+      "$type": "duration",
+      "$value": { "value": 20000, "unit": "ms" }
+    }
+  }
+}

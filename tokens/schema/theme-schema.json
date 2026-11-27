@@ -1,0 +1,42 @@
+{
+  "required": {
+    "color.paper": "color",
+    "color.surface": "color",
+    "color.ink": "color",
+    "color.secondaryInk": "color",
+    "color.tertiaryInk": "color",
+    "color.hairline": "color",
+    "color.scrim": "color",
+    "color.accent": "color",
+    "color.onAccent": "color",
+    "color.skeleton": "color",
+    "color.success": "color",
+    "color.warning": "color",
+    "color.error": "color",
+    "color.glass.secondaryInk": "color",
+    "color.glass.tertiaryInk": "color",
+    "color.glass.wash": "color",
+    "color.glass.band": "color",
+    "typography.title": "typography",
+    "typography.headline": "typography",
+    "typography.body": "typography",
+    "typography.callout": "typography",
+    "typography.caption": "typography",
+    "typography.mono": "typography",
+    "radii.small": "dimension",
+    "radii.medium": "dimension",
+    "radii.large": "dimension",
+    "radii.control": "dimension",
+    "radii.card": "dimension",
+    "spacing.xs": "dimension",
+    "spacing.sm": "dimension",
+    "spacing.md": "dimension",
+    "spacing.lg": "dimension",
+    "spacing.xl": "dimension",
+    "elevation.strokeWidth": "dimension"
+  },
+  "optional": {
+    "elevation.card": "shadow",
+    "elevation.floating": "shadow"
+  }
+}

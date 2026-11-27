@@ -33,7 +33,7 @@ struct ColorPairTests {
         #expect(faded.darkIncreasedContrast == nil)
     }
 
-    #if canImport(UIKit)
+    #if canImport(UIKit) && !os(watchOS)
     @MainActor
     @Test func uiColorFollowsTheTraits() {
         let color = UIColor(ColorPair(light: 0xFFFFFF, dark: 0x000000))
@@ -67,10 +67,38 @@ struct ColorPairTests {
 
 @MainActor
 struct ThemeTests {
-    @Test func theSystemThemeIsTheDefault() {
+    @Test func theSystemThemeIsTheDefaultAndSupportsLocalOverrides() {
         var values = EnvironmentValues()
-        #expect(values.misotoTheme.motion.quick == Theme.system.motion.quick)
-        values.misotoTheme.accent = .red
+        #expect(values.misotoTheme.radii == Theme.system.radii)
+        #expect(values.misotoTheme.variants == Theme.system.variants)
+        values.misotoTheme.colors.accent = .red
+        values.misotoTheme.variants.card = .glass
         #expect(values.misotoTheme.accent == .red)
+        #expect(values.misotoTheme.variants.card == .glass)
+    }
+
+    @Test func shadowPairResolvesByColorScheme() {
+        let light = ShadowToken(x: 0, y: 2, blur: 4, color: RGBA(hex: 0x000000, alpha: 0.1))
+        let dark = ShadowToken(x: 0, y: 2, blur: 4, color: RGBA(hex: 0x000000, alpha: 0.4))
+        let pair = ShadowPair(light: light, dark: dark)
+        #expect(pair.resolve(for: .light) == light)
+        #expect(pair.resolve(for: .dark) == dark)
+    }
+
+    @Test func themeColorStyleResolvesFromEnvironmentAndModifiersCompile() {
+        var env = EnvironmentValues()
+        let customAccent = Color(.sRGB, red: 0.2, green: 0.6, blue: 0.4, opacity: 1)
+        env.misotoTheme.colors.accent = customAccent
+
+        let resolved = ThemeColorStyle.misotoAccent.resolve(in: env)
+        #expect(abs(Double(resolved.red) - 0.2) < 0.01)
+        #expect(abs(Double(resolved.green) - 0.6) < 0.01)
+
+        let view = Text("SSOT")
+            .misotoFont(\.headline)
+            .foregroundStyle(.misotoInk)
+            .background(.misotoPaper)
+        let renderer = ImageRenderer(content: view.misotoTheme(env.misotoTheme))
+        #expect(renderer.cgImage != nil)
     }
 }

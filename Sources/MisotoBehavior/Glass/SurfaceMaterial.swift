@@ -1,11 +1,13 @@
+import MisotoTheme
 import SwiftUI
 
 /// The turn between Liquid Glass and an opaque surface: glass while a sheet or panel stands at a partial height, the
 /// app's paper (``Theme/paper``) at full height, and between them, as a finger drags it, the paper coming in over the
 /// glass with the lift.
 ///
-/// From revala-ios's `SheetMaterial` (owner, 2026-11-23/24: the whole drag turns the glass to paper, slowly at first
-/// and faster towards the top). The math is pure, so a UIKit sheet controller and a SwiftUI sheet read the same curve.
+/// Important pitfalls encoded here:
+/// - Toggle glass effects only outside animations, otherwise content stays blurred.
+/// - On iOS 26.0, a removed glass effect can continue drawing unless its backing view is hidden.
 public enum SurfaceMaterial {
     /// The lifts over which the paper comes in: from the partial height (0) to just short of full (0.95).
     public static let paperLift: ClosedRange<CGFloat> = 0...0.95
@@ -17,8 +19,7 @@ public enum SurfaceMaterial {
         return t * t * t
     }
 
-    /// Whether a surface at `lift` still reads as glass: while less than half of the paper covers it. What stands on it
-    /// takes the glass inks until then.
+    /// Whether a surface at `lift` still reads as glass: while less than half of the paper covers it.
     public static func isGlass(lift: CGFloat) -> Bool { paper(lift: lift) < 0.5 }
 
     /// `value` eased (smoothstep) from 0 at `start` to 1 at `end`, flat outside them.
@@ -27,8 +28,7 @@ public enum SurfaceMaterial {
         return t * t * (3 - 2 * t)
     }
 
-    /// How far a system sheet stands lifted from its partial detent (`restTop`, 0) to `.large` (`fullTop`, 1), from where
-    /// its top edge is now.
+    /// How far a system sheet stands lifted from its partial detent (`restTop`, 0) to `.large` (`fullTop`, 1).
     public static func systemLift(top: CGFloat, restTop: CGFloat, fullTop: CGFloat) -> CGFloat {
         guard restTop > fullTop else { return top <= fullTop ? 1 : 0 }
         return min(max((restTop - top) / (restTop - fullTop), 0), 1)
@@ -36,30 +36,36 @@ public enum SurfaceMaterial {
 
     /// Where a system sheet's top stands at its partial detent before it has stood there once: half the window.
     public static func restTop(window: CGFloat) -> CGFloat { window / 2 }
-    /// Where `.large` puts a sheet's top on a phone: a status bar and a step below the window's top.
+    /// Where `.large` puts a sheet's top on an iPhone: a status bar and a step below the window's top.
     public static func fullTop(window: CGFloat) -> CGFloat { window * largeTopShare }
     public static let largeTopShare: CGFloat = 0.07
 
-    /// Whether a sheet at `selected` is paper outright: at `.large`, when `.large` is its only detent, or when it stands on
-    /// another sheet (glass over a sheet blurs that sheet's rows and shows two rims).
-    public static func isPaper(selected: PresentationDetent, detents: [PresentationDetent], overSheet: Bool = false) -> Bool {
-        overSheet || selected == .large || detents == [.large]
+    /// Whether a sheet at `selected` is paper outright: at `.large`, when `.large` is its only detent, when it stands
+    /// over another sheet (`overSheet`), or when presented as a centered sheet on iPad (`isCentered`).
+    public static func isPaper(
+        selected: PresentationDetent,
+        detents: [PresentationDetent],
+        overSheet: Bool = false,
+        isCentered: Bool = false
+    ) -> Bool {
+        isCentered || overSheet || selected == .large || detents == [.large]
     }
 }
 
 extension EnvironmentValues {
     /// Whether the view stands on glass rather than paper, set by ``SwiftUI/View/surfaceMaterialSheet(detents:selection:overSheet:)``.
-    /// An app maps it to its own glass inks.
     @Entry public var standsOnGlass: Bool = false
+
+    /// What a page inside a `surfaceMaterialSheet` navigation stack stands on; nil outside such a sheet.
+    @Entry public var sheetPageGround: Color? = nil
 }
 
-/// A custom panel's ground at `lift`: the system's regular glass, with the app's paper over it by how far the panel is
-/// pulled up. Reduce Transparency is the system glass's own business: it frosts itself.
-@available(iOS 26, macOS 26, *)
+/// A custom panel's ground at `lift`: regular glass with paper fading over it, falling back to solid paper under Reduce Transparency.
 public struct SurfaceMaterialBackground<S: InsettableShape>: View {
     public let lift: CGFloat
     public let shape: S
     @Environment(\.misotoTheme) private var theme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     public init(lift: CGFloat, in shape: S) {
         self.lift = lift
@@ -67,21 +73,26 @@ public struct SurfaceMaterialBackground<S: InsettableShape>: View {
     }
 
     public var body: some View {
-        ZStack {
-            Color.clear.glassEffect(.regular, in: shape)
-            shape.fill(theme.paper).opacity(SurfaceMaterial.paper(lift: lift))
+        if reduceTransparency {
+            shape.fill(theme.colors.paper)
+        } else {
+            ZStack {
+                Color.clear.glassEffect(.regular, in: shape)
+                shape.fill(theme.colors.paper).opacity(SurfaceMaterial.paper(lift: lift))
+            }
         }
     }
 }
 
-/// A presented sheet's material and detents: the system's glass at a partial detent, the paper at `.large`, and between
-/// them, as the sheet is dragged, the paper coming in with its lift.
-@available(iOS 26, macOS 26, *)
+/// A presented sheet's material and detents: glass at partial detents on compact phones, solid paper at `.large`,
+/// when stacked (`overSheet`), or when presented centered on iPad regular width.
 private struct SurfaceMaterialSheet: ViewModifier {
     let detents: [PresentationDetent]
     let external: Binding<PresentationDetent>?
     let overSheet: Bool
     @Environment(\.misotoTheme) private var theme
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @State private var own: PresentationDetent
     @State private var lift: CGFloat = 0
     @State private var restTop: CGFloat?
@@ -95,15 +106,23 @@ private struct SurfaceMaterialSheet: ViewModifier {
     }
 
     private var selected: Binding<PresentationDetent> { external ?? $own }
-    private var paperOnly: Bool { overSheet || detents == [.large] }
+    private var isCenteredOnPad: Bool {
+        #if os(iOS)
+        horizontalSizeClass == .regular
+        #else
+        true
+        #endif
+    }
+    private var paperOnly: Bool { reduceTransparency || isCenteredOnPad || overSheet || detents == [.large] }
     private var rises: Bool { !paperOnly && detents.contains(.large) }
     private var paper: CGFloat { paperOnly ? 1 : rises ? SurfaceMaterial.paper(lift: lift) : 0 }
 
     func body(content: Content) -> some View {
         content
             .environment(\.standsOnGlass, paperOnly ? false : rises ? SurfaceMaterial.isGlass(lift: lift) : true)
+            .environment(\.sheetPageGround, paperOnly ? theme.colors.paper : .clear)
             .modifier(Detents(detents: detents, selection: external ?? (detents.count > 1 ? $own : nil)))
-            .background { if rises, paper > 0 { theme.paper.opacity(paper).ignoresSafeArea() } }
+            .background { if rises, paper > 0 { theme.colors.paper.opacity(paper).ignoresSafeArea() } }
             .onGeometryChange(for: TopEdge.self) { proxy in
                 let frame = proxy.frame(in: .global)
                 return TopEdge(top: frame.minY, window: frame.maxY)
@@ -119,11 +138,10 @@ private struct SurfaceMaterialSheet: ViewModifier {
                     restTop: restTop ?? SurfaceMaterial.restTop(window: edge.window),
                     fullTop: fullTop ?? SurfaceMaterial.fullTop(window: edge.window)
                 )
-                // In hundredths, so a frame that moves the top by a fraction of a point leaves the sheet as it is.
                 let stepped = (next * 100).rounded() / 100
                 if stepped != lift { lift = stepped }
             }
-            .presentationBackground { if paperOnly { theme.paper } }
+            .presentationBackground { if paperOnly { theme.colors.paper } }
     }
 }
 
@@ -145,16 +163,39 @@ private struct Detents: ViewModifier {
     }
 }
 
-@available(iOS 26, macOS 26, *)
 extension View {
-    /// The sheet's detents and its one material: glass at every partial detent, the theme's paper at `.large`, the paper
-    /// coming in as it is dragged between them. Replaces `presentationDetents` and `presentationBackground`. Sets
-    /// `\.standsOnGlass` for what the sheet holds. `overSheet`: a sheet presented from another sheet is paper throughout.
+    /// The sheet's detents and material: glass at partial detents, paper at `.large`, stacked (`overSheet`),
+    /// centered on iPad/macOS, or under Reduce Transparency. Replaces `presentationDetents` and `presentationBackground`.
     public func surfaceMaterialSheet(
         detents: [PresentationDetent] = [.large],
         selection: Binding<PresentationDetent>? = nil,
         overSheet: Bool = false
     ) -> some View {
         modifier(SurfaceMaterialSheet(detents: detents, selection: selection, overSheet: overSheet))
+    }
+
+    /// Background for a page inside a `surfaceMaterialSheet` navigation stack, preventing grey grouped flash during pushes.
+    public func sheetPaperPage() -> some View {
+        modifier(SheetPaperPage())
+    }
+}
+
+private struct SheetPaperPage: ViewModifier {
+    @Environment(\.sheetPageGround) private var ground
+
+    @ViewBuilder func body(content: Content) -> some View {
+        #if os(iOS)
+        if let ground {
+            content.containerBackground(ground, for: .navigation)
+        } else {
+            content
+        }
+        #else
+        if let ground {
+            content.background(ground)
+        } else {
+            content
+        }
+        #endif
     }
 }

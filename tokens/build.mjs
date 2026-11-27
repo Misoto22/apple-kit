@@ -1,19 +1,15 @@
 #!/usr/bin/env node
 /**
- * Builds a brand's DTCG tokens into Swift for MisotoTheme (and CSS custom properties, for the brand's web).
+ * Builds DTCG tokens into Swift for MisotoTheme/MisotoMotion, CSS custom properties, and pure-JVM Kotlin primitives.
  *
- *   misoto-tokens <tokens.json> --swift <out.swift> --enum <Name> [--css <out.css>] [--check]
- *
- * A colour token is `{"$type": "color", "$value": "#RRGGBB", "$extensions": {"misoto.dark": "#RRGGBB"}}`; optional
- * `misoto.lightIncreasedContrast` / `misoto.darkIncreasedContrast` give the Increase Contrast forms. A token with no dark
- * value is the same in both appearances. A duration token (`$type: duration`, `{"value": 0.25, "unit": "s"}`) becomes a
- * `TimeInterval`. `--check` fails when the files on disk differ from what the tokens build (CI's staleness gate).
+ *   misoto-tokens <tokens.json> [--swift <out.swift> --enum <Name>] [--theme <propName>] [--css <out.css>] [--kotlin <out.kt> --kotlin-package <pkg>] [--check]
  */
 import { readFileSync, writeFileSync, mkdtempSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import StyleDictionary from "style-dictionary";
-import { swiftFormat, cssFormat } from "./formats.mjs";
+import { swiftFormat, swiftThemeFormat, cssFormat, kotlinFormat } from "./formats.mjs";
 
 const args = process.argv.slice(2);
 const option = (name) => {
@@ -23,26 +19,40 @@ const option = (name) => {
 const source = args[0];
 const swiftOut = option("--swift");
 const cssOut = option("--css");
+const kotlinOut = option("--kotlin");
 const enumName = option("--enum") ?? "BrandTokens";
+const themeProp = option("--theme");
+const kotlinPackage = option("--kotlin-package") ?? "";
 const check = args.includes("--check");
-if (!source || (!swiftOut && !cssOut)) {
-  console.error("usage: misoto-tokens <tokens.json> --swift <out.swift> --enum <Name> [--css <out.css>] [--check]");
+if (!source || (!swiftOut && !cssOut && !kotlinOut)) {
+  console.error("usage: misoto-tokens <tokens.json> [--swift <out.swift> --enum <Name>] [--theme <propName>] [--css <out.css>] [--kotlin <out.kt> --kotlin-package <pkg>] [--check]");
   process.exit(2);
 }
 
-StyleDictionary.registerFormat({ name: "misoto/swift", format: ({ dictionary }) => swiftFormat(dictionary.allTokens, enumName) });
+const here = dirname(fileURLToPath(import.meta.url));
+const schema = themeProp ? JSON.parse(readFileSync(join(here, "schema/theme-schema.json"), "utf8")) : null;
+
+StyleDictionary.registerFormat({
+  name: "misoto/swift",
+  format: ({ dictionary }) =>
+    themeProp
+      ? swiftThemeFormat(dictionary.allTokens, enumName, themeProp, schema)
+      : swiftFormat(dictionary.allTokens, enumName),
+});
 StyleDictionary.registerFormat({ name: "misoto/css", format: ({ dictionary }) => cssFormat(dictionary.allTokens) });
+StyleDictionary.registerFormat({ name: "misoto/kotlin", format: ({ dictionary }) => kotlinFormat(dictionary.allTokens, enumName, kotlinPackage) });
 
 const scratch = mkdtempSync(join(tmpdir(), "misoto-tokens-"));
 const platforms = {};
 if (swiftOut) platforms.swift = { buildPath: `${scratch}/`, files: [{ destination: "out.swift", format: "misoto/swift" }] };
 if (cssOut) platforms.css = { buildPath: `${scratch}/`, files: [{ destination: "out.css", format: "misoto/css" }] };
+if (kotlinOut) platforms.kotlin = { buildPath: `${scratch}/`, files: [{ destination: "out.kt", format: "misoto/kotlin" }] };
 
 const sd = new StyleDictionary({ source: [source], usesDtcg: true, platforms, log: { verbosity: "silent" } });
 await sd.buildAllPlatforms();
 
 let stale = false;
-for (const [built, target] of [["out.swift", swiftOut], ["out.css", cssOut]]) {
+for (const [built, target] of [["out.swift", swiftOut], ["out.css", cssOut], ["out.kt", kotlinOut]]) {
   if (!target) continue;
   const text = readFileSync(join(scratch, built), "utf8");
   if (check) {

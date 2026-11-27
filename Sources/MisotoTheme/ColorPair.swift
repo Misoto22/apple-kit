@@ -1,6 +1,6 @@
 import SwiftUI
 
-#if canImport(UIKit)
+#if canImport(UIKit) && !os(watchOS)
 import UIKit
 #elseif canImport(AppKit)
 import AppKit
@@ -36,9 +36,6 @@ public struct RGBA: Sendable, Hashable {
 }
 
 /// A colour that answers the appearance: light and dark, and optionally their Increase Contrast forms.
-///
-/// The four apps each wrote this once (kioku's trait providers, Kura's `Pair`, Jade's `ColorPair`, Revala's asset
-/// catalog). The resolution is `nonisolated` and the system calls it from any thread, so the pair holds plain values only.
 public struct ColorPair: Sendable, Hashable {
     public var light: RGBA
     public var dark: RGBA
@@ -80,7 +77,7 @@ public struct ColorPair: Sendable, Hashable {
     }
 }
 
-#if canImport(UIKit)
+#if canImport(UIKit) && !os(watchOS)
 extension UIColor {
     public convenience init(_ pair: ColorPair) {
         self.init { traits in
@@ -117,6 +114,23 @@ extension NSColor {
 extension Color {
     public init(_ pair: ColorPair) {
         self.init(nsColor: NSColor(pair))
+    }
+}
+#else
+private struct DynamicColorPairStyle: ShapeStyle, Hashable {
+    let pair: ColorPair
+
+    func resolve(in environment: EnvironmentValues) -> Color.Resolved {
+        let isDark = environment.colorScheme == .dark
+        let highContrast = environment.colorSchemeContrast == .increased
+        let v = pair.resolve(dark: isDark, increasedContrast: highContrast)
+        return Color.Resolved(colorSpace: .sRGB, red: Float(v.red), green: Float(v.green), blue: Float(v.blue), opacity: Float(v.alpha))
+    }
+}
+
+extension Color {
+    public init(_ pair: ColorPair) {
+        self.init(DynamicColorPairStyle(pair: pair))
     }
 }
 #endif

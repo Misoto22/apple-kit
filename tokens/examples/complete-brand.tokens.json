@@ -1,0 +1,56 @@
+{
+  "color": {
+    "paper": { "$type": "color", "$value": "#FAF9F6", "$extensions": { "misoto.dark": "#141413" } },
+    "surface": { "$type": "color", "$value": "#F2F0EA", "$extensions": { "misoto.dark": "#1E1E1C" } },
+    "ink": { "$type": "color", "$value": "#1E1D1A", "$extensions": { "misoto.dark": "#F2F0EA" } },
+    "secondaryInk": { "$type": "color", "$value": "#625F57", "$extensions": { "misoto.dark": "#A8A49B" } },
+    "tertiaryInk": { "$type": "color", "$value": "#8A867D", "$extensions": { "misoto.dark": "#7B776F" } },
+    "hairline": { "$type": "color", "$value": "#1E1D1A26", "$extensions": { "misoto.dark": "#F2F0EA26" } },
+    "scrim": { "$type": "color", "$value": "#00000033", "$extensions": { "misoto.dark": "#00000080" } },
+    "accent": { "$type": "color", "$value": "#4A6B53", "$extensions": { "misoto.dark": "#7BA386" } },
+    "onAccent": { "$type": "color", "$value": "#FFFFFF", "$extensions": { "misoto.dark": "#141413" } },
+    "skeleton": { "$type": "color", "$value": "#1E1D1A1F", "$extensions": { "misoto.dark": "#F2F0EA1F" } },
+    "success": { "$type": "color", "$value": "#23703F", "$extensions": { "misoto.dark": "#4EA86C" } },
+    "warning": { "$type": "color", "$value": "#9A6700", "$extensions": { "misoto.dark": "#D99B26" } },
+    "error": { "$type": "color", "$value": "#A82A20", "$extensions": { "misoto.dark": "#E55347" } },
+    "glass": {
+      "secondaryInk": { "$type": "color", "$value": "#5A5750", "$extensions": { "misoto.dark": "#D2CEC5" } },
+      "tertiaryInk": { "$type": "color", "$value": "#6F6B63", "$extensions": { "misoto.dark": "#B8B3A9" } },
+      "wash": { "$type": "color", "$value": "#1E1D1A12", "$extensions": { "misoto.dark": "#F2F0EA12" } },
+      "band": { "$type": "color", "$value": "#1E1D1A24", "$extensions": { "misoto.dark": "#F2F0EA24" } }
+    }
+  },
+  "typography": {
+    "title": { "$type": "typography", "$value": { "fontFamily": "System", "design": "serif", "textStyle": "title2", "weight": "semibold" } },
+    "headline": { "$type": "typography", "$value": { "fontFamily": "System", "design": "serif", "textStyle": "headline", "weight": "semibold" } },
+    "body": { "$type": "typography", "$value": { "fontFamily": "System", "design": "default", "textStyle": "body", "weight": "regular" } },
+    "callout": { "$type": "typography", "$value": { "fontFamily": "System", "design": "default", "textStyle": "callout", "weight": "regular" } },
+    "caption": { "$type": "typography", "$value": { "fontFamily": "System", "design": "default", "textStyle": "caption", "weight": "regular" } },
+    "mono": { "$type": "typography", "$value": { "fontFamily": "Geist Mono", "fontSize": 14, "textStyle": "callout", "weight": "medium" } }
+  },
+  "radii": {
+    "small": { "$type": "dimension", "$value": { "value": 8, "unit": "pt" } },
+    "medium": { "$type": "dimension", "$value": { "value": 12, "unit": "pt" } },
+    "large": { "$type": "dimension", "$value": { "value": 20, "unit": "pt" } },
+    "control": { "$type": "dimension", "$value": { "value": 12, "unit": "pt" } },
+    "card": { "$type": "dimension", "$value": { "value": 16, "unit": "pt" } }
+  },
+  "spacing": {
+    "xs": { "$type": "dimension", "$value": { "value": 4, "unit": "pt" } },
+    "sm": { "$type": "dimension", "$value": { "value": 8, "unit": "pt" } },
+    "md": { "$type": "dimension", "$value": { "value": 16, "unit": "pt" } },
+    "lg": { "$type": "dimension", "$value": { "value": 24, "unit": "pt" } },
+    "xl": { "$type": "dimension", "$value": { "value": 32, "unit": "pt" } }
+  },
+  "elevation": {
+    "strokeWidth": { "$type": "dimension", "$value": { "value": 1, "unit": "pt" } },
+    "floating": {
+      "$type": "shadow",
+      "$value": { "offsetX": 0, "offsetY": 6, "blur": 18, "spread": 0, "color": "#0000001F" },
+      "$extensions": { "misoto.dark": { "offsetX": 0, "offsetY": 6, "blur": 18, "spread": 0, "color": "#00000066" } }
+    }
+  },
+  "brand": {
+    "moss": { "$type": "color", "$value": "#4A6B53", "$extensions": { "misoto.dark": "#7BA386" } }
+  }
+}

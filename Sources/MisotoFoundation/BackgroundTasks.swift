@@ -1,5 +1,5 @@
 import Foundation
-import os
+import Synchronization
 
 #if os(iOS)
 @preconcurrency import BackgroundTasks
@@ -21,11 +21,10 @@ extension BGTask: BackgroundTaskCompleting {}
 /// unwound. Whichever comes first completes the task; the other does nothing.
 ///
 /// `Sendable`, so the expiration handler can be a `@Sendable` closure: one written in a main-actor function is main-actor
-/// isolated, and the system does not say which queue it calls that handler on. The task is only reached through the lock.
+/// isolated, and the system does not say which queue it calls that handler on. The task is only reached through the mutex.
 public final class BackgroundTaskCompletion: BackgroundTaskCompleting, @unchecked Sendable {
-    // OSAllocatedUnfairLock, not Mutex: jade's Mac app still runs on macOS 14.
     private let task: any BackgroundTaskCompleting
-    private let completed = OSAllocatedUnfairLock(initialState: false)
+    private let completed = Mutex(false)
 
     public init(_ task: any BackgroundTaskCompleting) {
         self.task = task
@@ -65,6 +64,7 @@ public final class BackgroundTaskCompletion: BackgroundTaskCompleting, @unchecke
 /// Written in an `App` or any main-actor type, the handler is main-actor isolated, and Swift 6's executor check traps
 /// there: kioku-ios's daily background crash (TestFlight 1.15.2). Here the queue is always the main one and the handler is
 /// declared `@MainActor`, so the check holds and the type system says where it runs.
+@available(iOSApplicationExtension, unavailable)
 public enum BackgroundTasks {
     /// Registers `handler` for `identifier` on the main queue. Call before the app finishes launching, once per
     /// identifier. Returns false when the identifier is not in the Info.plist's permitted list.
@@ -78,21 +78,6 @@ public enum BackgroundTasks {
         scheduler.register(forTaskWithIdentifier: identifier, using: .main) { task in
             MainActor.assumeIsolated { handler(task) }
         }
-    }
-
-    /// Runs `work` for `task` on the main actor with the expiration wired: on expiry the run is cancelled and the task
-    /// completed at once; otherwise the task completes with `work`'s answer, after the submission `work` returns.
-    @MainActor
-    public static func run(
-        _ task: BGTask,
-        _ work: @escaping @MainActor () async -> (success: Bool, next: Task<Void, Never>?)
-    ) {
-        let completion = BackgroundTaskCompletion(task)
-        let run = Task { @MainActor in
-            let (success, next) = await work()
-            await completion.complete(success: success && !Task.isCancelled, after: next)
-        }
-        task.expirationHandler = { @Sendable in completion.expire(cancelling: run) }
     }
 }
 #endif
