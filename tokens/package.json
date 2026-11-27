@@ -6,7 +6,7 @@
   "engines": { "node": ">=22" },
   "bin": { "misoto-tokens": "./build.mjs" },
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test \"test/*.test.mjs\""
   },
   "dependencies": {
     "style-dictionary": "5.7.1"
