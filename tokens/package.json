@@ -1,0 +1,14 @@
+{
+  "name": "@misoto/tokens",
+  "private": true,
+  "description": "One token pipeline for the Misoto iOS apps: W3C DTCG input, Style Dictionary, Swift that speaks MisotoTheme",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "bin": { "misoto-tokens": "./build.mjs" },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "style-dictionary": "5.7.1"
+  }
+}

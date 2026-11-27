@@ -11,6 +11,11 @@ brand: colours, type, curves and the look of every component stay in the app.
 
 Platforms: iOS 26, macOS 14 (jade's Mac app). Swift 6 language mode. No dependencies.
 
+## Tokens
+
+`tokens/` is the one token pipeline: a brand's DTCG tokens in, Swift that speaks MisotoTheme (and CSS) out, through
+Style Dictionary. See `tokens/README.md`.
+
 ## Using it
 
 In the app's `project.yml` (XcodeGen), once:
