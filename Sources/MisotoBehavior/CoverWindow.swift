@@ -34,6 +34,9 @@ public final class CoverWindow {
         public var keyboardHandBack: KeyboardHandBack
         /// Gives the hosting view a clear background, for a face that does not fill the screen.
         public var clearBackground: Bool
+        /// Shown again while it fades out: also hides the app from VoiceOver again and takes the keyboard back (kioku),
+        /// or only stops the fade (kura).
+        public var reclaimsDuringFade: Bool
 
         public init(
             isModal: Bool,
@@ -41,7 +44,8 @@ public final class CoverWindow {
             announcesOnShow: Bool,
             announcesOnHide: Bool,
             keyboardHandBack: KeyboardHandBack,
-            clearBackground: Bool
+            clearBackground: Bool,
+            reclaimsDuringFade: Bool
         ) {
             self.isModal = isModal
             self.endsEditingBelow = endsEditingBelow
@@ -49,19 +53,31 @@ public final class CoverWindow {
             self.announcesOnHide = announcesOnHide
             self.keyboardHandBack = keyboardHandBack
             self.clearBackground = clearBackground
+            self.reclaimsDuringFade = reclaimsDuringFade
         }
 
         /// A privacy cover with a relock gate over it (kioku-ios's `PrivacyShield`).
         public static let privacyCover = Options(
             isModal: false, endsEditingBelow: true, announcesOnShow: true, announcesOnHide: false,
-            keyboardHandBack: .whenCoverIsKey, clearBackground: true
+            keyboardHandBack: .whenCoverIsKey, clearBackground: true, reclaimsDuringFade: true
         )
 
         /// A lock that keeps the app's focused field for when it lifts (kura-ios's `LockCover`).
         public static let lock = Options(
             isModal: true, endsEditingBelow: false, announcesOnShow: false, announcesOnHide: true,
-            keyboardHandBack: .always, clearBackground: false
+            keyboardHandBack: .always, clearBackground: false, reclaimsDuringFade: false
         )
+    }
+
+    /// How the cover fades out.
+    public enum Fade {
+        /// A SwiftUI animation, through `UIView.animate(_:)`.
+        case animation(Animation)
+        /// A UIKit duration and curve. A window's alpha animated through a SwiftUI animation can land in one frame where
+        /// this form fades (kura-ios's 150 ms unlock fade, measured 2026-11-27).
+        case curve(duration: TimeInterval, options: UIView.AnimationOptions)
+        /// A UIKit spring: `.smooth(duration:)` is `bounce: 0`.
+        case spring(duration: TimeInterval, bounce: CGFloat)
     }
 
     public let options: Options
@@ -120,7 +136,7 @@ public final class CoverWindow {
 
     /// Down, back to the app as it was left: with `fade` (nil under Reduce Motion, or to cut), then `completion` once the
     /// window is hidden. Shown again while it fades, it stays.
-    public func hide(fade: Animation?, completion: (@MainActor () -> Void)? = nil) {
+    public func hide(fade: Fade?, completion: (@MainActor () -> Void)? = nil) {
         guard isShowing else { return }
         isShowing = false
         guard let window, !window.isHidden else { return }
@@ -142,11 +158,27 @@ public final class CoverWindow {
             if self.options.announcesOnHide { UIAccessibility.post(notification: .screenChanged, argument: nil) }
             completion?()
         }
-        guard let fade else { return finish() }
-        UIView.animate(fade) {
-            window.alpha = 0
-        } completion: {
+        switch fade {
+        case nil:
             finish()
+        case .animation(let animation):
+            UIView.animate(animation) {
+                window.alpha = 0
+            } completion: {
+                finish()
+            }
+        case .spring(let duration, let bounce):
+            UIView.animate(springDuration: duration, bounce: bounce) {
+                window.alpha = 0
+            } completion: { _ in
+                finish()
+            }
+        case .curve(let duration, let curve):
+            UIView.animate(withDuration: duration, delay: 0, options: curve) {
+                window.alpha = 0
+            } completion: { _ in
+                finish()
+            }
         }
     }
 
@@ -161,8 +193,10 @@ public final class CoverWindow {
     private func raise(takingKeyboard: Bool) {
         guard let window else { return }
         let others = others(than: window)
+        let wasFading = !window.isHidden
         window.layer.removeAllAnimations()
         window.alpha = 1
+        if wasFading, !options.reclaimsDuringFade { return }
         window.isHidden = false
         window.layoutIfNeeded()
         // Handed to the render server now, not at the end of this run loop turn, which may come after the picture.
