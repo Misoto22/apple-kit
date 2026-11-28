@@ -8,20 +8,30 @@ import UIKit
 @available(iOSApplicationExtension, unavailable)
 @MainActor
 public enum AppearanceWindow {
-    /// Applies `style` to every window in `scene`, optionally crossfading when Reduce Motion is off.
+    /// Whether a cross-dissolve transition should run for a window given its visibility, alpha, flag, and Reduce Motion.
+    nonisolated public static func shouldAnimate(
+        windowIsHidden: Bool,
+        alpha: CGFloat,
+        animated: Bool,
+        reduceMotion: Bool
+    ) -> Bool {
+        animated && !reduceMotion && !windowIsHidden && alpha > 0
+    }
+
+    /// Applies `style` to every window in `scene`, optionally crossfading visible windows when Reduce Motion is off.
     public static func apply(
         _ style: UIUserInterfaceStyle,
         in scene: UIWindowScene,
         animated: Bool = true
     ) {
-        let shouldAnimate = animated && !ReducedMotion.isOn
+        let reduced = ReducedMotion.isOn
         for window in scene.windows {
             guard window.overrideUserInterfaceStyle != style else { continue }
-            if shouldAnimate {
+            if shouldAnimate(windowIsHidden: window.isHidden, alpha: window.alpha, animated: animated, reduceMotion: reduced) {
                 UIView.transition(
                     with: window,
                     duration: Motion.medium,
-                    options: [.transitionCrossDissolve, .allowAnimatedContent]
+                    options: [.transitionCrossDissolve, .allowUserInteraction, .allowAnimatedContent]
                 ) {
                     window.overrideUserInterfaceStyle = style
                 }
