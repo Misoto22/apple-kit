@@ -22,14 +22,32 @@ public struct CardGrid<Content: View>: View {
     }
 }
 
-/// Ensures at least a 44×44 pt accessible hit target via an expanded `contentShape` without altering layout size.
+/// Expands a view's bounds around its center to at least `minSize × minSize` (`44 × 44 pt` by default) for touch hit
+/// testing without altering visual layout size.
+public struct HitArea: Shape, Sendable {
+    public static let minimum: CGFloat = 44
+    public var minSize: CGFloat
+
+    public init(minSize: CGFloat = Self.minimum) {
+        self.minSize = minSize
+    }
+
+    public func path(in rect: CGRect) -> Path {
+        Path(
+            rect.insetBy(
+                dx: min(0, (rect.width - minSize) / 2),
+                dy: min(0, (rect.height - minSize) / 2)
+            )
+        )
+    }
+}
+
+/// Ensures at least a `minSize × minSize` accessible hit target via an expanded `contentShape` without altering layout size.
 private struct HitTargetOutsetModifier: ViewModifier {
     let minSize: CGFloat
 
     func body(content: Content) -> some View {
-        content
-            .frame(minWidth: minSize, minHeight: minSize)
-            .contentShape(.rect)
+        content.contentShape(HitArea(minSize: minSize))
     }
 }
 
@@ -49,8 +67,8 @@ extension View {
         modifier(ReadableWidthModifier(maxWidth: maxWidth))
     }
 
-    /// Expands the interactive hit area to at least `minSize × minSize` (`44 pt` by default).
-    public func hitTargetOutset(minSize: CGFloat = 44) -> some View {
+    /// Expands the interactive hit area to at least `minSize × minSize` (`44 pt` by default) without altering layout size.
+    public func hitTargetOutset(minSize: CGFloat = HitArea.minimum) -> some View {
         modifier(HitTargetOutsetModifier(minSize: minSize))
     }
 }

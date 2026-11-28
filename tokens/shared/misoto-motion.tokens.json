@@ -26,6 +26,14 @@
       "$type": "duration",
       "$value": { "value": 800, "unit": "ms" }
     },
+    "spinDuration": {
+      "$type": "duration",
+      "$value": { "value": 850, "unit": "ms" }
+    },
+    "spinEnsoDuration": {
+      "$type": "duration",
+      "$value": { "value": 1100, "unit": "ms" }
+    },
     "breathLow": {
       "$type": "number",
       "$value": 0.55

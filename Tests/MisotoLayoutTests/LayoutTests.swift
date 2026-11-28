@@ -39,8 +39,6 @@ struct LayoutTests {
     }
 
     @Test func flowLayoutArrangeFallsBackToGreedyIfBalancedRowWouldOverflow() {
-        // Greedy gives [[0, 1, 2], [3]] (widths 101, 70 -> 2 rows at maxWidth 101).
-        // Balanced across 2 rows tries [0, 1] (48 <= 101) and [2, 3] (45 + 8 + 70 = 123 > 101), so it falls back to greedy.
         let mixed = [
             CGSize(width: 20, height: 20),
             CGSize(width: 20, height: 20),
@@ -54,5 +52,26 @@ struct LayoutTests {
     @Test func equalWidthRowInitializesWithCustomSpacing() {
         let row = EqualWidthRow(spacing: 12)
         #expect(row.spacing == 12)
+    }
+
+    @Test func hitAreaExpandsSmallBoundsCenteredAndKeepsLargeBoundsUnchanged() {
+        let small = HitArea().path(in: CGRect(x: 10, y: 10, width: 16, height: 20)).boundingRect
+        #expect(small == CGRect(x: -4, y: -2, width: 44, height: 44))
+
+        let large = HitArea().path(in: CGRect(x: 0, y: 0, width: 60, height: 48)).boundingRect
+        #expect(large == CGRect(x: 0, y: 0, width: 60, height: 48))
+    }
+
+    @MainActor
+    @Test func hitTargetOutsetPreservesVisualLayoutSize() {
+        let plain = ImageRenderer(content: Color.red.frame(width: 12, height: 12))
+        plain.scale = 1.0
+        let outset = ImageRenderer(content: Color.red.frame(width: 12, height: 12).hitTargetOutset())
+        outset.scale = 1.0
+
+        #expect(plain.cgImage?.width == 12)
+        #expect(plain.cgImage?.height == 12)
+        #expect(outset.cgImage?.width == 12)
+        #expect(outset.cgImage?.height == 12)
     }
 }

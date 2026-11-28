@@ -4,18 +4,18 @@ What `kioku-ios`, `revala-ios`, `kura-ios`, and `jade` share, as one layered Swi
 
 ## Single Source of Truth (SSOT)
 
-AppleKit owns **the semantic contract** (variable names, motion vocabulary, glass-to-paper mechanics, adopted atomic components, and 6-language UI strings). Each brand owns **only its values** in DTCG tokens validated against `tokens/schema/theme-schema.json`:
+AppleKit owns **the semantic contract** (token roles, generated shared motion/timing constants, glass-to-paper mechanics, adopted atomic primitives, and 6-language UI strings). Each brand owns **only its values** in DTCG tokens validated against `tokens/schema/theme-schema.json`:
 
 ```swift
 // At app root, once:
 RootView()
     .misotoTheme(BrandTheme.current)
 
-// Anywhere in views (no manual @Environment boilerplate required):
-Text("Title")
-    .misotoFont(\.headline)
-    .foregroundStyle(.misotoInk)
-    .background(.misotoPaper)
+// Components resolve variants and roles from Environment(\.misotoTheme),
+// or accept explicit per-site overrides (variant, tint, track) without extra .environment boilerplate:
+MisotoSpinner()
+MisotoProgress(value: 0.6)
+Toggle("Setting", isOn: $enabled).toggleStyle(.misoto)
 ```
 
 ## Users today
@@ -31,27 +31,31 @@ Text("Title")
 
 ```text
 Sources/
-├── MisotoFoundation/      # Keychain, BackgroundTasks, RetryAfter, RateLimitRetry, Base64URL, AppleLanguages, ImageDownsampler
-├── MisotoTheme/           # ColorPair, FontRole, ShadowToken, modular Theme, ShapeStyle (.misotoInk / .misotoPaper / .misotoFont)
-├── MisotoMotion/          # Unified curves (CubicBezier, StandardEasing), Motion tokens & orchestration, @ReduceMotion
-├── MisotoLayout/          # FlowLayout, EqualWidthRow, CardGrid, .readableWidth(), .hitTargetOutset()
+├── MisotoFoundation/      # Keychain, RetryAfter, RateLimitRetry, Base64URL, AppleLanguages, ImageDownsampler
+├── MisotoTheme/           # ColorPair, FontRole, ShadowToken, modular Theme (.misotoTheme(_:))
+├── MisotoMotion/          # Generated motion SSOT (CubicBezier, StandardEasing), Motion tokens, @ReduceMotion
+├── MisotoLayout/          # FlowLayout, EqualWidthRow, CardGrid, .readableWidth(), HitArea / .hitTargetOutset()
 ├── MisotoBehavior/
 │   ├── Glass/             # SurfaceMaterial, .surfaceMaterialSheet, GlassInkStyle, GlassFill, .glassSurface
+│   ├── Navigation/        # TabSwitchFade (.fadingTabSwitches())
 │   ├── Sheets/            # SheetPosition, fittedSheet, guardsUnsavedChanges, bottomActionBar, pageTopEdge, sheetRootClose
-│   └── System/            # CoverWindow, WindowSceneReader, AppearanceWindow, RelockPolicy, PlatformSystem
+│   ├── System/            # CoverWindow, WindowSceneReader, AppearanceWindow, RelockPolicy, PlatformSystem
+│   └── Resources/         # Localizable.xcstrings (en, fr, ja, ko, zh-Hans, zh-Hant)
 ├── MisotoComponents/
 │   ├── Feedback/          # MisotoSpinner, MisotoProgress, MisotoToast (ToastTiming/ToastCenter), LoadingTiming/LoadingActivity
 │   ├── Controls/          # MisotoToggleStyle (.misoto)
 │   ├── Localization/      # MisotoStrings (Bundle.module)
 │   └── Resources/         # Localizable.xcstrings (en, fr, ja, ko, zh-Hans, zh-Hant)
-├── MisotoGallery/         # Multi-brand gallery view for visual review & snapshot matrix verification
+├── MisotoGallery/         # Internal multi-brand gallery for visual review & snapshot tests (not exported as a product)
 └── MisotoTesting/         # RecordingKeychain, BrandThemeFixtures
 
 tokens/
 ├── schema/                # theme-schema.json (SSOT semantic key & $type contract)
 ├── shared/                # misoto-motion.tokens.json, misoto-timing.tokens.json
+├── dist/                  # Generated CSS & Kotlin artifacts consumed by Web / Android
 ├── examples/              # complete-brand.tokens.json
-├── build.mjs              # CLI (--swift, --theme, --css, --kotlin, --check)
+├── generate-shared.mjs    # Generates Swift, CSS, and Kotlin from tokens/shared/*.tokens.json (--check)
+├── build.mjs              # Brand CLI (--swift, --theme, --css, --kotlin, --check)
 ├── formats.mjs            # Swift, Theme extension, CSS (dark + high contrast), pure-JVM Kotlin
 └── test/                  # Schema validation, formatter, and SSOT drift tests
 ```
@@ -72,7 +76,9 @@ Minimum platforms: **iOS 26 / iPadOS 26 / macOS 26 / watchOS 26**.
 ## Token Pipeline (`tokens/`)
 
 ```sh
-cd tokens && npm ci && npm test
+cd tokens && npm ci
+node generate-shared.mjs --check
+npm test
 node build.mjs examples/complete-brand.tokens.json \
   --swift Generated/BrandTokens.swift --enum KiokuTokens --theme kioku \
   --css generated/tokens.css \

@@ -9,10 +9,10 @@
 // - MisotoTheme:      SwiftUI value-type design tokens and roles (`Theme`, `ColorPair`, `FontRole`, `ShadowToken`).
 // - MisotoMotion:     Unified motion curves, durations, Reduce Motion entry points, and orchestration modifiers.
 // - MisotoLayout:     Shared layout primitives (FlowLayout, EqualWidthRow, readableWidth, 44 pt hit target).
-// - MisotoBehavior:   Liquid Glass & paper surface material, sheets, privacy cover, appearance window, scene readers.
+// - MisotoBehavior:   Liquid Glass & paper surface material, sheets, privacy cover, appearance window, scene readers, tab fade.
 // - MisotoComponents: Shared SwiftUI components with closed named variants and 6-language localized strings.
 // - MisotoTesting:    Test doubles and multi-brand Theme fixtures.
-// - MisotoGallery:    Multi-brand component gallery for visual review & matrix snapshot verification.
+// - MisotoGallery:    Internal multi-brand component gallery for snapshot matrix verification (not shipped as a product).
 //
 // Swift 6 language mode everywhere: the isolation checks this package exists to get right are Swift 6's.
 
@@ -30,14 +30,17 @@ let package = Package(
         .library(name: "MisotoBehavior", targets: ["MisotoBehavior"]),
         .library(name: "MisotoComponents", targets: ["MisotoComponents"]),
         .library(name: "MisotoTesting", targets: ["MisotoTesting"]),
-        .library(name: "MisotoGallery", targets: ["MisotoGallery"]),
     ],
     targets: [
         .target(name: "MisotoFoundation"),
         .target(name: "MisotoTheme"),
         .target(name: "MisotoMotion"),
         .target(name: "MisotoLayout"),
-        .target(name: "MisotoBehavior", dependencies: ["MisotoTheme", "MisotoMotion"]),
+        .target(
+            name: "MisotoBehavior",
+            dependencies: ["MisotoTheme", "MisotoMotion"],
+            resources: [.process("Resources")]
+        ),
         .target(
             name: "MisotoComponents",
             dependencies: ["MisotoTheme", "MisotoMotion", "MisotoLayout", "MisotoBehavior"],

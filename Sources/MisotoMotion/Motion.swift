@@ -90,25 +90,25 @@ public enum StandardEasing {
     }
 }
 
-/// Unified motion vocabulary across all Misoto apps (Revala reference).
+/// Unified motion vocabulary across all Misoto apps (generated from `tokens/shared/misoto-motion.tokens.json`).
 public enum Motion {
-    public static let standardCurve = CubicBezier(x1: 0.4, y1: 0.0, x2: 0.2, y2: 1.0)
-    public static let emphasizedCurve = CubicBezier(x1: 0.16, y1: 1.0, x2: 0.3, y2: 1.0)
+    public static let standardCurve = GeneratedMotionTokens.standardCurve
+    public static let emphasizedCurve = GeneratedMotionTokens.emphasizedCurve
 
-    public static let fast: TimeInterval = 0.15
-    public static let medium: TimeInterval = 0.20
-    public static let slowDuration: TimeInterval = 0.30
-    public static let breathDuration: TimeInterval = 0.80
-    public static let spinDuration: TimeInterval = 0.85
-    public static let spinEnsoDuration: TimeInterval = 1.10
-    public static let breathLow: Double = 0.55
+    public static let fast: TimeInterval = GeneratedMotionTokens.fast
+    public static let medium: TimeInterval = GeneratedMotionTokens.medium
+    public static let slowDuration: TimeInterval = GeneratedMotionTokens.slowDuration
+    public static let breathDuration: TimeInterval = GeneratedMotionTokens.breathDuration
+    public static let spinDuration: TimeInterval = GeneratedMotionTokens.spinDuration
+    public static let spinEnsoDuration: TimeInterval = GeneratedMotionTokens.spinEnsoDuration
+    public static let breathLow: Double = GeneratedMotionTokens.breathLow
 
-    public static let enterOffset: CGFloat = 4
-    public static let enterScale: CGFloat = 0.92
-    public static let stagger: TimeInterval = 0.06
+    public static let enterOffset: CGFloat = GeneratedMotionTokens.enterOffset
+    public static let enterScale: CGFloat = GeneratedMotionTokens.enterScale
+    public static let stagger: TimeInterval = GeneratedMotionTokens.stagger
 
-    public static let pressScale: CGFloat = 0.96
-    public static let pressOpacity: Double = 0.85
+    public static let pressScale: CGFloat = GeneratedMotionTokens.pressScale
+    public static let pressOpacity: Double = GeneratedMotionTokens.pressOpacity
 
     /// Something under the finger: a press, a selection, a subtle shift.
     public static let quick = standardCurve.animation(duration: fast)

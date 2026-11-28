@@ -1,5 +1,23 @@
+import Foundation
 import MisotoTheme
 import SwiftUI
+
+/// Localized dialog defaults bundled inside `MisotoBehavior`.
+public enum MisotoBehaviorStrings {
+    public static var resourceBundle: Bundle { .module }
+
+    public static var discardChanges: String {
+        String(localized: "discard_changes", defaultValue: "Discard Changes", bundle: .module)
+    }
+
+    public static var discardChangesTitle: String {
+        String(localized: "discard_changes_title", defaultValue: "Discard changes?", bundle: .module)
+    }
+
+    public static var keepEditing: String {
+        String(localized: "keep_editing", defaultValue: "Keep Editing", bundle: .module)
+    }
+}
 
 /// Top scroll-edge policy for pages vs sheet forms vs map overlays.
 public enum PageTopEdge: Sendable {
@@ -73,17 +91,17 @@ private struct BottomActionBar<Bar: View>: ViewModifier {
 private struct DiscardChangesGuard: ViewModifier {
     let hasChanges: Bool
     @Binding var asking: Bool
-    let title: LocalizedStringKey
-    let discardTitle: LocalizedStringKey
-    let keepEditingTitle: LocalizedStringKey
+    let title: Text
+    let discardTitle: Text
+    let keepEditingTitle: Text
     let discard: () -> Void
 
     func body(content: Content) -> some View {
         content
             .interactiveDismissDisabled(hasChanges)
             .confirmationDialog(title, isPresented: $asking, titleVisibility: .visible) {
-                Button(discardTitle, role: .destructive, action: discard)
-                Button(keepEditingTitle, role: .cancel) {}
+                Button(role: .destructive, action: discard) { discardTitle }
+                Button(role: .cancel) {} label: { keepEditingTitle }
             }
     }
 }
@@ -126,21 +144,42 @@ extension View {
         modifier(BottomActionBar(bar: bar(), edge: edge, inset: inset, maxWidth: maxWidth))
     }
 
-    /// Prevents swipe-to-dismiss while `hasChanges` is true and asks confirmation before discarding.
+    /// Prevents swipe-to-dismiss while `hasChanges` is true and asks confirmation before discarding,
+    /// defaulting to `MisotoBehavior`'s 6-language localized strings (`Bundle.module`).
     public func guardsUnsavedChanges(
         _ hasChanges: Bool,
         asking: Binding<Bool>,
-        title: LocalizedStringKey = "Discard changes?",
-        discardTitle: LocalizedStringKey = "Discard Changes",
-        keepEditingTitle: LocalizedStringKey = "Keep Editing",
+        title: String? = nil,
+        discardTitle: String? = nil,
+        keepEditingTitle: String? = nil,
         discard: @escaping () -> Void
     ) -> some View {
         modifier(DiscardChangesGuard(
             hasChanges: hasChanges,
             asking: asking,
-            title: title,
-            discardTitle: discardTitle,
-            keepEditingTitle: keepEditingTitle,
+            title: Text(verbatim: title ?? MisotoBehaviorStrings.discardChangesTitle),
+            discardTitle: Text(verbatim: discardTitle ?? MisotoBehaviorStrings.discardChanges),
+            keepEditingTitle: Text(verbatim: keepEditingTitle ?? MisotoBehaviorStrings.keepEditing),
+            discard: discard
+        ))
+    }
+
+    /// Prevents swipe-to-dismiss while `hasChanges` is true with caller-localized `LocalizedStringKey` titles.
+    @_disfavoredOverload
+    public func guardsUnsavedChanges(
+        _ hasChanges: Bool,
+        asking: Binding<Bool>,
+        title: LocalizedStringKey,
+        discardTitle: LocalizedStringKey? = nil,
+        keepEditingTitle: LocalizedStringKey? = nil,
+        discard: @escaping () -> Void
+    ) -> some View {
+        modifier(DiscardChangesGuard(
+            hasChanges: hasChanges,
+            asking: asking,
+            title: Text(title),
+            discardTitle: discardTitle.map { Text($0) } ?? Text(verbatim: MisotoBehaviorStrings.discardChanges),
+            keepEditingTitle: keepEditingTitle.map { Text($0) } ?? Text(verbatim: MisotoBehaviorStrings.keepEditing),
             discard: discard
         ))
     }

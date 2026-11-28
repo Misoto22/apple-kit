@@ -1,11 +1,28 @@
 import Foundation
 import Observation
 
+#if canImport(UIKit) && !os(watchOS)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
+
 /// Timing constants matching `tokens/shared/misoto-timing.tokens.json`.
 public enum ToastTiming {
-    public static let shortDuration: TimeInterval = 3.0
-    public static let undoDuration: TimeInterval = 5.0
-    public static let voiceOverDuration: TimeInterval = 20.0
+    public static let shortDuration: TimeInterval = GeneratedTimingTokens.Toast.shortDuration
+    public static let undoDuration: TimeInterval = GeneratedTimingTokens.Toast.undoDuration
+    public static let voiceOverDuration: TimeInterval = GeneratedTimingTokens.Toast.voiceOverDuration
+
+    /// Whether the system VoiceOver assistive technology is currently active.
+    @MainActor public static var systemIsVoiceOverRunning: Bool {
+        #if canImport(UIKit) && !os(watchOS)
+        UIAccessibility.isVoiceOverRunning
+        #elseif canImport(AppKit)
+        NSWorkspace.shared.isVoiceOverEnabled
+        #else
+        false
+        #endif
+    }
 }
 
 public struct ToastMessage: Identifiable, Sendable {
@@ -39,7 +56,8 @@ public struct ToastMessage: Identifiable, Sendable {
     }
 }
 
-/// Queueing, auto-dismiss, pause-on-touch, and undo toast engine.
+/// Queueing, auto-dismiss, pause-on-touch, and undo toast engine that reads system VoiceOver state automatically
+/// when callers omit `isVoiceOverRunning`.
 @MainActor
 @Observable
 public final class ToastCenter {
@@ -48,19 +66,25 @@ public final class ToastCenter {
     public private(set) var isPaused = false
 
     private var dismissTask: Task<Void, Never>?
+    private let isVoiceOverRunningProvider: @MainActor () -> Bool
 
-    public init() {}
+    public init(
+        isVoiceOverRunning: @escaping @MainActor () -> Bool = { ToastTiming.systemIsVoiceOverRunning }
+    ) {
+        self.isVoiceOverRunningProvider = isVoiceOverRunning
+    }
 
     public func show(
         _ text: String,
         systemImage: String? = nil,
-        isVoiceOverRunning: Bool = false,
+        isVoiceOverRunning: Bool? = nil,
         undo: (@MainActor @Sendable () -> Void)? = nil
     ) {
+        let voiceOver = isVoiceOverRunning ?? isVoiceOverRunningProvider()
         let message = ToastMessage(
             text: text,
             systemImage: systemImage,
-            isVoiceOverRunning: isVoiceOverRunning,
+            isVoiceOverRunning: voiceOver,
             undo: undo
         )
         if current == nil {

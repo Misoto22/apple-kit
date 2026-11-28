@@ -1,0 +1,10 @@
+/* Generated from tokens/shared/misoto-timing.tokens.json by tokens/generate-shared.mjs. Do not edit. */
+:root {
+  --misoto-toast-short-duration: 3000ms;
+  --misoto-toast-undo-duration: 5000ms;
+  --misoto-toast-voiceover-duration: 20000ms;
+  --misoto-loading-placeholder-delay: 400ms;
+  --misoto-loading-minimum-display: 600ms;
+  --misoto-loading-slow-threshold: 8000ms;
+  --misoto-loading-timeout: 20000ms;
+}

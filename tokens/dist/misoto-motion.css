@@ -1,0 +1,17 @@
+/* Generated from tokens/shared/misoto-motion.tokens.json by tokens/generate-shared.mjs. Do not edit. */
+:root {
+  --misoto-motion-curve-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --misoto-motion-curve-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --misoto-motion-duration-quick: 150ms;
+  --misoto-motion-duration-standard: 200ms;
+  --misoto-motion-duration-slow: 300ms;
+  --misoto-motion-duration-breath: 800ms;
+  --misoto-motion-duration-spin: 850ms;
+  --misoto-motion-duration-spin-enso: 1100ms;
+  --misoto-motion-breath-low: 0.55;
+  --misoto-motion-enter-offset: 4px;
+  --misoto-motion-enter-scale: 0.92;
+  --misoto-motion-stagger: 60ms;
+  --misoto-motion-press-scale: 0.96;
+  --misoto-motion-press-opacity: 0.85;
+}

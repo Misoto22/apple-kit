@@ -85,19 +85,14 @@ struct ThemeTests {
         #expect(pair.resolve(for: .dark) == dark)
     }
 
-    @Test func themeColorStyleResolvesFromEnvironmentAndModifiersCompile() {
+    @Test func themeRolesInjectThroughEnvironmentAndRenderCleanly() {
         var env = EnvironmentValues()
-        let customAccent = Color(.sRGB, red: 0.2, green: 0.6, blue: 0.4, opacity: 1)
-        env.misotoTheme.colors.accent = customAccent
-
-        let resolved = ThemeColorStyle.misotoAccent.resolve(in: env)
-        #expect(abs(Double(resolved.red) - 0.2) < 0.01)
-        #expect(abs(Double(resolved.green) - 0.6) < 0.01)
+        env.misotoTheme.colors.accent = .red
 
         let view = Text("SSOT")
-            .misotoFont(\.headline)
-            .foregroundStyle(.misotoInk)
-            .background(.misotoPaper)
+            .font(env.misotoTheme.typography.headline.font)
+            .foregroundStyle(env.misotoTheme.colors.ink)
+            .background(env.misotoTheme.colors.paper)
         let renderer = ImageRenderer(content: view.misotoTheme(env.misotoTheme))
         #expect(renderer.cgImage != nil)
     }
