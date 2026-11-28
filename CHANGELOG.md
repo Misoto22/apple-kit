@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/Misoto22/apple-kit/compare/v0.2.1...v0.2.2) (2026-11-28)
+
+
+### Bug Fixes
+
+* **layout,behavior:** harden FlowLayout, guard hidden AppearanceWindow transitions, and add sheetRootClose ([#11](https://github.com/Misoto22/apple-kit/issues/11)) ([ce7ff1d](https://github.com/Misoto22/apple-kit/commit/ce7ff1de0adbf58444805c821e7ba3e0830cc542))
+
 ## [0.2.1](https://github.com/Misoto22/apple-kit/compare/v0.2.0...v0.2.1) (2026-11-28)
 
 
