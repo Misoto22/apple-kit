@@ -64,6 +64,11 @@ Minimum platforms: **iOS 26 / iPadOS 26 / macOS 26 / watchOS 26**.
 - `MisotoBehavior`: iOS, iPadOS, macOS (`UIWindow`/`UIApplication` APIs marked `#if os(iOS)` and `@available(iOSApplicationExtension, unavailable)`).
 - `MisotoComponents`: iOS, iPadOS, macOS.
 
+## Design Guidelines
+
+- [Haptics Vocabulary](docs/haptics.md)
+- [Architecture Decisions](docs/decisions)
+
 ## Token Pipeline (`tokens/`)
 
 ```sh
