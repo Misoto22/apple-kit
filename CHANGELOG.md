@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/Misoto22/apple-kit/compare/v0.3.1...v0.3.2) (2026-11-28)
+
+
+### Bug Fixes
+
+* **apple-kit:** fix audit defects, tighten snapshots and CI gates ([#17](https://github.com/Misoto22/apple-kit/issues/17)) ([939f7a4](https://github.com/Misoto22/apple-kit/commit/939f7a4d81fc1a406728fdceed42a4cdeb8b7a95))
+
 ## [0.3.1](https://github.com/Misoto22/apple-kit/compare/v0.3.0...v0.3.1) (2026-11-28)
 
 
