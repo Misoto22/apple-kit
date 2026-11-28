@@ -152,6 +152,23 @@ extension View {
     ) -> some View {
         modifier(AccessibilityDetentsModifier(detents: detents, selection: selection))
     }
+
+    /// Places the system close button in the cancellation toolbar slot on a sheet navigation root.
+    public func sheetRootClose() -> some View {
+        modifier(SheetRootCloseModifier())
+    }
+}
+
+private struct SheetRootCloseModifier: ViewModifier {
+    @Environment(\.dismiss) private var dismiss
+
+    func body(content: Content) -> some View {
+        content.toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(role: .close) { dismiss() }
+            }
+        }
+    }
 }
 
 private struct AccessibilityDetentsModifier: ViewModifier {
