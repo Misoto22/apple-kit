@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/Misoto22/apple-kit/compare/v0.3.0...v0.3.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* **foundation,testing:** generalize RateLimitRetry and RecordingKeychain and add haptics guide ([#15](https://github.com/Misoto22/apple-kit/issues/15)) ([5e1ba9e](https://github.com/Misoto22/apple-kit/commit/5e1ba9e058b0f9bde0160e1d54a358c7e5083cd7))
+
 ## [0.3.0](https://github.com/Misoto22/apple-kit/compare/v0.2.2...v0.3.0) (2026-11-28)
 
 
