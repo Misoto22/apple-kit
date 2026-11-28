@@ -4,7 +4,7 @@ Date: 2026-11-27. Updated: 2026-11-28. Status: accepted.
 
 ## Context
 
-Four Apple apps (`kioku-ios`, `revala-ios`, `kura-ios`, `jade`), four GitHub organisations, one maintainer. Initially AppleKit restricted itself to foundation and unstyled behaviour. A subsequent full-codebase audit found 19 shared component categories, Liquid Glass sheet mechanics, motion orchestration, and layout primitives duplicated 2 to 4 times across the apps.
+7. Initially AppleKit restricted itself to foundation and unstyled behaviour. A subsequent audit extracted shared primitives, Liquid Glass sheet mechanics, motion orchestration, and layout primitives across the four apps; at the Phase 4 Checkpoint (Decision 0006), visual shell components with divergent brand structure were pruned back in favour of sharing tokens, motion, layout, behaviors, and adopted atomic primitives (`MisotoSpinner`, `MisotoProgress`, `MisotoToggleStyle`, timing engines, and 6-language strings).
 
 Unlike Material Components for iOS (which failed by replacing platform controls with custom renderers), these four apps share one maintainer and build strictly on top of SwiftUI/UIKit native controls.
 

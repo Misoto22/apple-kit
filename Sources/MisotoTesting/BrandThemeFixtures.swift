@@ -17,20 +17,9 @@ public enum BrandThemeFixtures {
             headline: .system(.headline, design: .serif, weight: .semibold)
         ),
         variants: Theme.Variants(
-            buttonShape: .roundedRect,
-            buttonFill: .solid,
-            iconButtonSurface: .paperCircle,
-            textButtonFeedback: .dim,
-            chipSurface: .paper,
-            card: .outlined,
-            emptyState: .symbol,
             spinner: .arc,
             progress: .ring,
-            segmentedTrack: .solid,
-            toggle: .switch,
-            field: .outlined,
-            toast: .paper,
-            settingRow: .plain
+            toggle: .switch
         )
     )
 
@@ -54,20 +43,9 @@ public enum BrandThemeFixtures {
             mono: .custom("Geist Mono", size: 14, relativeTo: .callout, weight: .medium)
         ),
         variants: Theme.Variants(
-            buttonShape: .capsule,
-            buttonFill: .solid,
-            iconButtonSurface: .glassCircle,
-            textButtonFeedback: .wash,
-            chipSurface: .glass,
-            card: .filled,
-            emptyState: .illustrated,
             spinner: .arc,
             progress: .bar,
-            segmentedTrack: .glass,
-            toggle: .switch,
-            field: .filled,
-            toast: .glass,
-            settingRow: .card
+            toggle: .switch
         )
     )
 
@@ -84,20 +62,9 @@ public enum BrandThemeFixtures {
             mono: .custom("Martian Mono", size: 13, relativeTo: .callout, weight: .regular)
         ),
         variants: Theme.Variants(
-            buttonShape: .roundedRect,
-            buttonFill: .solid,
-            iconButtonSurface: .paperCircle,
-            textButtonFeedback: .dim,
-            chipSurface: .paper,
-            card: .outlined,
-            emptyState: .symbol,
             spinner: .markPulse,
             progress: .ring,
-            segmentedTrack: .solid,
-            toggle: .check,
-            field: .outlined,
-            toast: .paper,
-            settingRow: .plain
+            toggle: .check
         )
     )
 
@@ -114,20 +81,9 @@ public enum BrandThemeFixtures {
             title: .custom("Optima", size: 24, relativeTo: .title2, weight: .semibold)
         ),
         variants: Theme.Variants(
-            buttonShape: .capsule,
-            buttonFill: .glass,
-            iconButtonSurface: .glassCircle,
-            textButtonFeedback: .wash,
-            chipSurface: .glass,
-            card: .glass,
-            emptyState: .illustrated,
             spinner: .enso,
-            progress: .ring,
-            segmentedTrack: .glass,
-            toggle: .switch,
-            field: .filled,
-            toast: .glass,
-            settingRow: .card
+            progress: .bar,
+            toggle: .switch
         )
     )
 

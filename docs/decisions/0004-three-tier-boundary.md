@@ -10,7 +10,7 @@ Supporting legacy OS versions (`macOS 14`) forced `@available(iOS 26, macOS 26, 
 
 1. **Three-tier architecture**:
    - Unified: motion values/orchestration, Liquid Glass-to-paper transitions, toast/loading timing, press feedback, and pull-to-refresh.
-   - Shared structure + closed named variants (≤ 3): the 19 component categories in `MisotoComponents`.
+   - Shared structure + closed named variants (≤ 3): the adopted atomic components in `MisotoComponents` (`MisotoSpinner`, `MisotoProgress`, `MisotoToggleStyle`), plus unified timing engines (`ToastCenter`/`ToastTiming`, `LoadingActivity`/`LoadingTiming`) and `MisotoStrings` (see Decision 0006 for the Phase 4 Option B scope).
    - Brand-owned: DTCG token values, illustrations, mascots, and signature motions.
 2. **Apple 26+ baseline**: `Package.swift` targets `[.iOS(.v26), .macOS(.v26), .watchOS(.v26)]`. All `@available(..., 26, *)` guards are removed, and `Synchronization.Mutex` is used directly.
 3. **Platform & Extension matrix**:
