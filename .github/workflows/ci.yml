@@ -31,6 +31,14 @@ jobs:
           xcodebuild test -scheme AppleKit-Package \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+      - name: Verify AppleLanguages switches Bundle.module localization on iOS Simulator
+        run: |
+          xcodebuild test -scheme AppleKit-Package \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -only-testing:MisotoComponentsTests/LocalizationTests \
+            -only-testing:MisotoBehaviorTests/SurfaceMaterialTests \
+            -testLanguage ja -testRegion JP \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
       - name: Test on iPad Simulator, warnings as errors
         run: |
           IPAD_ID=$(xcrun simctl list devices available | grep -m1 'iPad' | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/')

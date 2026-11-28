@@ -58,6 +58,7 @@ struct SurfaceMaterialTests {
     @Test func behaviorStringsResolveInAllSixLanguages() throws {
         let locales = ["en", "fr", "ja", "ko", "zh-Hans", "zh-Hant"]
         var titles: Set<String> = []
+        #if os(iOS)
         for lang in locales {
             let lprojURL = try #require(
                 MisotoBehaviorStrings.resourceBundle.url(forResource: lang, withExtension: "lproj"),
@@ -72,9 +73,55 @@ struct SurfaceMaterialTests {
             #expect(!keep.isEmpty && keep != "keep_editing")
             titles.insert(title)
         }
+        #else
+        if MisotoBehaviorStrings.resourceBundle.url(forResource: "en", withExtension: "lproj") != nil {
+            for lang in locales {
+                let lprojURL = try #require(
+                    MisotoBehaviorStrings.resourceBundle.url(forResource: lang, withExtension: "lproj"),
+                    "Missing compiled .lproj bundle for \(lang)"
+                )
+                let langBundle = try #require(Bundle(url: lprojURL))
+                let title = langBundle.localizedString(forKey: "discard_changes_title", value: nil, table: nil)
+                let discard = langBundle.localizedString(forKey: "discard_changes", value: nil, table: nil)
+                let keep = langBundle.localizedString(forKey: "keep_editing", value: nil, table: nil)
+                #expect(!title.isEmpty && title != "discard_changes_title")
+                #expect(!discard.isEmpty && discard != "discard_changes")
+                #expect(!keep.isEmpty && keep != "keep_editing")
+                titles.insert(title)
+            }
+        } else {
+            let xcstringsURL = try #require(
+                MisotoBehaviorStrings.resourceBundle.url(forResource: "Localizable", withExtension: "xcstrings"),
+                "Missing Localizable.xcstrings in MisotoBehavior Bundle.module"
+            )
+            let data = try Data(contentsOf: xcstringsURL)
+            let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+            let strings = try #require(json["strings"] as? [String: Any])
+            for key in ["discard_changes_title", "discard_changes", "keep_editing"] {
+                let entry = try #require(strings[key] as? [String: Any])
+                let localizations = try #require(entry["localizations"] as? [String: Any])
+                for lang in locales {
+                    let langEntry = try #require(localizations[lang] as? [String: Any], "Missing \(lang) for \(key)")
+                    let unit = try #require(langEntry["stringUnit"] as? [String: Any])
+                    let value = try #require(unit["value"] as? String)
+                    #expect(!value.isEmpty)
+                    if key == "discard_changes_title" {
+                        titles.insert(value)
+                    }
+                }
+            }
+        }
+        #endif
+
         #expect(titles.count == locales.count, "All 6 locales should resolve distinct translated titles")
         #expect(!MisotoBehaviorStrings.discardChangesTitle.isEmpty)
         #expect(!MisotoBehaviorStrings.discardChanges.isEmpty)
         #expect(!MisotoBehaviorStrings.keepEditing.isEmpty)
+
+        let isJapanese = Locale.preferredLanguages.first?.hasPrefix("ja") == true
+            || UserDefaults.standard.stringArray(forKey: "AppleLanguages")?.first?.hasPrefix("ja") == true
+        if isJapanese {
+            #expect(MisotoBehaviorStrings.discardChangesTitle == "変更を破棄しますか？")
+        }
     }
 }
