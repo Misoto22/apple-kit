@@ -25,6 +25,7 @@ enum SnapshotVerifier {
     static func assertSnapshot<V: View>(
         of view: V,
         named name: String,
+        maxDiffRatio: Double = Self.maxDiffRatio,
         filePath: StaticString = #filePath
     ) throws {
         let renderer = ImageRenderer(content: view)
