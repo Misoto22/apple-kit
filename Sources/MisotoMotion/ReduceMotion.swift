@@ -2,6 +2,8 @@ import SwiftUI
 
 #if canImport(UIKit) && !os(watchOS)
 import UIKit
+#elseif canImport(WatchKit)
+import WatchKit
 #elseif canImport(AppKit)
 import AppKit
 #endif
@@ -13,6 +15,8 @@ public enum ReducedMotion {
     @MainActor public static var isOn: Bool {
         #if canImport(UIKit) && !os(watchOS)
         UIAccessibility.isReduceMotionEnabled
+        #elseif canImport(WatchKit)
+        WKAccessibilityIsReduceMotionEnabled()
         #elseif canImport(AppKit)
         NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         #else

@@ -2,96 +2,6 @@
   "sourceLanguage": "en",
   "version": "1.0",
   "strings": {
-    "cancel": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cancel" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Annuler" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "キャンセル" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "취소" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "取消" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "取消" } }
-      }
-    },
-    "clear": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Clear" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Effacer" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "クリア" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "지우기" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "清除" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "清除" } }
-      }
-    },
-    "close": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Close" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Fermer" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "閉じる" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "닫기" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "关闭" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "關閉" } }
-      }
-    },
-    "decrement": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Decrease" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Diminuer" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "減らす" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "감소" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "减少" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "減少" } }
-      }
-    },
-    "discard_changes": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Discard Changes" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Ignorer les modifications" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "変更を破棄" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "변경 사항 폐기" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "放弃更改" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "捨棄變更" } }
-      }
-    },
-    "discard_changes_title": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Discard changes?" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Ignorer les modifications ?" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "変更を破棄しますか？" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "변경 사항을 폐기할까요?" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "要放弃更改吗？" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "要捨棄變更嗎？" } }
-      }
-    },
-    "increment": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Increase" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Augmenter" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "増やす" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "증가" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "增加" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "增加" } }
-      }
-    },
-    "item_of_total": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Item %lld of %lld" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Élément %lld sur %lld" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "%2$lld件中%1$lld件目" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "%2$lld개 중 %1$lld번째" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "第 %lld 项，共 %lld 项" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "第 %lld 項，共 %lld 項" } }
-      }
-    },
-    "keep_editing": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Keep Editing" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Continuer l’édition" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "編集を続ける" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "계속 편집" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "继续编辑" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "繼續編輯" } }
-      }
-    },
     "loading": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Loading" } },
@@ -102,34 +12,24 @@
         "zh-Hant": { "stringUnit": { "state": "translated", "value": "載入中" } }
       }
     },
-    "retry": {
+    "toggle_off": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Retry" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Réessayer" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "再試行" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "다시 시도" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "重试" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "重試" } }
+        "en": { "stringUnit": { "state": "translated", "value": "Off" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Désactivé" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "オフ" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "끔" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "关闭" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "關閉" } }
       }
     },
-    "save": {
+    "toggle_on": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Save" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Enregistrer" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "保存" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "저장" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "保存" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "儲存" } }
-      }
-    },
-    "search": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Search" } },
-        "fr": { "stringUnit": { "state": "translated", "value": "Rechercher" } },
-        "ja": { "stringUnit": { "state": "translated", "value": "検索" } },
-        "ko": { "stringUnit": { "state": "translated", "value": "검색" } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "搜索" } },
-        "zh-Hant": { "stringUnit": { "state": "translated", "value": "搜尋" } }
+        "en": { "stringUnit": { "state": "translated", "value": "On" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Activé" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "オン" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "켬" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "开启" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "開啟" } }
       }
     },
     "undo": {

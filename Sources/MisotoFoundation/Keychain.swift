@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(LocalAuthentication)
+import LocalAuthentication
+#endif
 import Security
 
 /// The Keychain calls a stored credential needs, as a seam. An unsigned test host has no Keychain entitlement, so a test
@@ -146,30 +149,46 @@ public struct GenericPassword: Sendable, Hashable {
     }
 
     /// Deletes the row and adds it again whole: for a row whose access control must be set afresh, which `SecItemUpdate`
-    /// cannot change. Reads the previous value first and attempts to restore it if `add` fails.
+    /// cannot change.
+    ///
+    /// Rollback never degrades the row's protection class: before deleting, this inspects `rollbackAccess` or the
+    /// existing item's `kSecAttrAccessible` attribute without prompting user authentication, and only reads/restores the
+    /// previous data (non-interactively via `LAContext.interactionNotAllowed = true`) when an explicit protection level
+    /// is known.
     @discardableResult
     public func replace(
         _ data: Data,
         access: Access,
+        rollbackAccess: Access? = nil,
         in keychain: some KeychainItems = SystemKeychain()
     ) -> OSStatus {
-        let previous = read(in: keychain)
+        let verifiedRollbackAccess = rollbackAccess ?? existingAccessible(in: keychain)
+        var previousData: Data?
+        if verifiedRollbackAccess != nil {
+            var authExtra: [String: Any] = [:]
+            #if canImport(LocalAuthentication)
+            let context = LAContext()
+            context.interactionNotAllowed = true
+            authExtra[kSecUseAuthenticationContext as String] = context
+            #endif
+            let previous = read(in: keychain, extra: authExtra)
+            if previous.status == errSecSuccess {
+                previousData = previous.data
+            }
+        }
+
         let deleteStatus = keychain.delete(query)
         guard KeychainStatus.isSuccessOrNotFound(deleteStatus) else { return deleteStatus }
 
         var insert = query
         insert[kSecValueData as String] = data
-        switch access {
-        case .accessible(let accessible):
-            insert[kSecAttrAccessible as String] = accessible
-        case .accessControl(let accessControl):
-            insert[kSecAttrAccessControl as String] = accessControl
-        }
+        Self.apply(access, to: &insert)
 
         let addStatus = keychain.add(insert)
-        if addStatus != errSecSuccess, previous.status == errSecSuccess, let previousData = previous.data {
+        if addStatus != errSecSuccess, let previousData, let verifiedRollbackAccess {
             var restore = query
             restore[kSecValueData as String] = previousData
+            Self.apply(verifiedRollbackAccess, to: &restore)
             _ = keychain.add(restore)
         }
         return addStatus
@@ -190,6 +209,26 @@ public struct GenericPassword: Sendable, Hashable {
         let (items, status) = keychain.copyAttributes([kSecClass as String: kSecClassGenericPassword])
         guard status == errSecSuccess else { return [] }
         return items.compactMap { $0[kSecAttrService as String] as? String }.filter { $0.hasPrefix(prefix) }
+    }
+
+    private func existingAccessible(in keychain: some KeychainItems) -> Access? {
+        let (items, status) = keychain.copyAttributes(query)
+        guard status == errSecSuccess,
+              let accessible = items.first?[kSecAttrAccessible as String] as? String,
+              !accessible.isEmpty
+        else {
+            return nil
+        }
+        return .accessible(accessible as CFString)
+    }
+
+    private static func apply(_ access: Access, to attributes: inout [String: Any]) {
+        switch access {
+        case .accessible(let accessible):
+            attributes[kSecAttrAccessible as String] = accessible
+        case .accessControl(let accessControl):
+            attributes[kSecAttrAccessControl as String] = accessControl
+        }
     }
 }
 

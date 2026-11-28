@@ -238,7 +238,7 @@ extension EnvironmentValues {
 
 extension View {
     /// Hands the app's theme to every shared behaviour and component below.
-    public func misotoTheme(_ theme: Theme) -> some View {
+    nonisolated public func misotoTheme(_ theme: Theme) -> some View {
         environment(\.misotoTheme, theme)
     }
 }

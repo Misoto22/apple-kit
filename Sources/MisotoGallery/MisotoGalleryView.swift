@@ -12,6 +12,7 @@ public struct MisotoGalleryView: View {
     @State private var isDark = false
     @State private var useLargestText = false
     @State private var forceReduceMotion = false
+    @State private var forceReduceTransparency = false
     @State private var toggleOn = true
 
     public init() {}
@@ -33,13 +34,14 @@ public struct MisotoGalleryView: View {
                 .padding(16)
                 .readableWidth()
             }
-            .background(.misotoPaper)
+            .background(activeBrand.theme.colors.paper)
             .navigationTitle("AppleKit Gallery")
         }
         .misotoTheme(activeBrand.theme)
         .preferredColorScheme(isDark ? .dark : .light)
         .dynamicTypeSize(useLargestText ? .accessibility3 : .medium)
         .environment(\.forcesReduceMotion, forceReduceMotion)
+        .environment(\.forcesReduceTransparency, forceReduceTransparency)
     }
 
     private var controlsCard: some View {
@@ -53,9 +55,13 @@ public struct MisotoGalleryView: View {
             Toggle("Dark Appearance", isOn: $isDark).toggleStyle(.misoto)
             Toggle("Accessibility Text Size", isOn: $useLargestText).toggleStyle(.misoto)
             Toggle("Force Reduce Motion", isOn: $forceReduceMotion).toggleStyle(.misoto)
+            Toggle("Force Reduce Transparency", isOn: $forceReduceTransparency).toggleStyle(.misoto)
         }
         .padding(16)
-        .background(.misotoSurface, in: RoundedRectangle(cornerRadius: activeBrand.theme.radii.card, style: .continuous))
+        .background(
+            activeBrand.theme.colors.surface,
+            in: RoundedRectangle(cornerRadius: activeBrand.theme.radii.card, style: .continuous)
+        )
         .overlay(
             RoundedRectangle(cornerRadius: activeBrand.theme.radii.card, style: .continuous)
                 .strokeBorder(activeBrand.theme.colors.hairline, lineWidth: activeBrand.theme.elevation.strokeWidth)
@@ -82,10 +88,10 @@ public struct MisotoGalleryShowcase: View {
         VStack(alignment: .leading, spacing: theme.spacing.md) {
             VStack(alignment: .leading, spacing: theme.spacing.xs) {
                 Text(brandName)
-                    .misotoFont(\.title)
-                    .foregroundStyle(.misotoInk)
+                    .font(theme.typography.title.font)
+                    .foregroundStyle(theme.colors.ink)
                 Text("Unified Primitives & Liquid Glass")
-                    .misotoFont(\.caption)
+                    .font(theme.typography.caption.font)
                     .foregroundStyle(theme.colors.secondaryInk)
             }
 
@@ -109,13 +115,13 @@ public struct MisotoGalleryShowcase: View {
             VStack(alignment: .leading, spacing: theme.spacing.sm) {
                 EqualWidthRow(spacing: theme.spacing.sm) {
                     Text("Primary")
-                        .misotoFont(\.callout)
+                        .font(theme.typography.callout.font)
                         .foregroundStyle(theme.colors.onAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, theme.spacing.sm)
                         .background(theme.colors.accent, in: Capsule())
                     Text("Secondary")
-                        .misotoFont(\.callout)
+                        .font(theme.typography.callout.font)
                         .foregroundStyle(theme.colors.ink)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, theme.spacing.sm)
@@ -125,7 +131,7 @@ public struct MisotoGalleryShowcase: View {
                 FlowLayout(spacing: theme.spacing.xs, lineSpacing: theme.spacing.xs, balancesRows: true) {
                     ForEach(["Balanced", "Flow", "Layout", "Tokens"], id: \.self) { label in
                         Text(label)
-                            .misotoFont(\.caption)
+                            .font(theme.typography.caption.font)
                             .foregroundStyle(theme.colors.ink)
                             .padding(.horizontal, theme.spacing.sm)
                             .padding(.vertical, theme.spacing.xs)
@@ -144,10 +150,10 @@ public struct MisotoGalleryShowcase: View {
             // Liquid Glass & GlassInk surface sample (responds to Reduce Transparency)
             VStack(alignment: .leading, spacing: theme.spacing.xs) {
                 Text("SurfaceMaterial & GlassInk")
-                    .misotoFont(\.headline)
+                    .font(theme.typography.headline.font)
                     .foregroundStyle(GlassInkStyle(plain: theme.colors.ink, glass: theme.colors.glass.secondaryInk))
                 Text("Adapts cleanly under Reduce Transparency & High Contrast")
-                    .misotoFont(\.caption)
+                    .font(theme.typography.caption.font)
                     .foregroundStyle(GlassInkStyle(plain: theme.colors.secondaryInk, glass: theme.colors.glass.tertiaryInk))
             }
             .padding(theme.spacing.md)

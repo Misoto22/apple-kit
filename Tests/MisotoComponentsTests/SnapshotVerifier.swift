@@ -7,8 +7,8 @@ import UniformTypeIdentifiers
 
 @MainActor
 enum SnapshotVerifier {
-    private static let channelTolerance = 12
-    private static let maxDiffRatio = 0.02
+    private static let channelTolerance = 4
+    private static let maxDiffRatio = 0.0005
 
     static var isRecording: Bool {
         ProcessInfo.processInfo.environment["MISOTO_RECORD_SNAPSHOTS"] == "1"
@@ -25,6 +25,7 @@ enum SnapshotVerifier {
     static func assertSnapshot<V: View>(
         of view: V,
         named name: String,
+        maxDiffRatio: Double = Self.maxDiffRatio,
         filePath: StaticString = #filePath
     ) throws {
         let renderer = ImageRenderer(content: view)
@@ -69,7 +70,7 @@ enum SnapshotVerifier {
         let diffRatio = pixelCount > 0 ? Double(mismatched) / Double(pixelCount) : 0
         #expect(
             diffRatio <= maxDiffRatio,
-            "\(name): snapshot drifted (\(mismatched)/\(pixelCount) pixels = \(String(format: "%.3f%%", diffRatio * 100)), maxDelta=\(maxDelta)) at \(url.path)"
+            "\(name): snapshot drifted (\(mismatched)/\(pixelCount) pixels = \(String(format: "%.4f%%", diffRatio * 100)), maxDelta=\(maxDelta)) at \(url.path)"
         )
     }
 

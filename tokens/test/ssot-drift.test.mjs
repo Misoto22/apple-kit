@@ -1,5 +1,5 @@
-// Verifies 1:1 SSOT parity between tokens/shared/*.tokens.json and Swift constants in MisotoMotion / MisotoComponents,
-// plus one-source-three-outputs generation (Swift Theme, pure-JVM Kotlin, CSS dark + high-contrast).
+// Verifies 1:1 SSOT parity between tokens/shared/*.tokens.json and generated Swift/CSS/Kotlin outputs via `--check`,
+// plus one-source-three-outputs brand generation via build.mjs.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -10,64 +10,35 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../..");
+const genScript = join(here, "../generate-shared.mjs");
 
-const motionTokens = JSON.parse(readFileSync(join(here, "../shared/misoto-motion.tokens.json"), "utf8")).motion;
-const timingTokens = JSON.parse(readFileSync(join(here, "../shared/misoto-timing.tokens.json"), "utf8"));
-const motionSwift = readFileSync(join(root, "Sources/MisotoMotion/Motion.swift"), "utf8");
-const toastSwift = readFileSync(join(root, "Sources/MisotoComponents/Feedback/MisotoToast.swift"), "utf8");
-const loadingSwift = readFileSync(join(root, "Sources/MisotoComponents/Feedback/LoadingTiming.swift"), "utf8");
+test("shared motion and timing tokens match generated Swift, CSS, and Kotlin artifacts 1:1", () => {
+  execFileSync("node", [genScript, "--check"], { encoding: "utf8" });
 
-const durationSeconds = (token) => (token.$value.unit === "ms" ? token.$value.value / 1000 : token.$value.value);
-
-test("shared motion tokens match Motion.swift 1:1", () => {
-  const [sx1, sy1, sx2, sy2] = motionTokens.standardCurve.$value;
-  assert.match(motionSwift, new RegExp(`standardCurve = CubicBezier\\(x1: ${sx1}, y1: ${sy1}(?:\\.0)?, x2: ${sx2}, y2: ${sy2}(?:\\.0)?\\)`));
-
-  const [ex1, ey1, ex2, ey2] = motionTokens.emphasizedCurve.$value;
-  assert.match(motionSwift, new RegExp(`emphasizedCurve = CubicBezier\\(x1: ${ex1}, y1: ${ey1}(?:\\.0)?, x2: ${ex2}, y2: ${ey2}(?:\\.0)?\\)`));
-
-  const checks = [
-    ["fast", durationSeconds(motionTokens.quickDuration)],
-    ["medium", durationSeconds(motionTokens.standardDuration)],
-    ["slowDuration", durationSeconds(motionTokens.slowDuration)],
-    ["breathDuration", durationSeconds(motionTokens.breathDuration)],
-    ["breathLow", motionTokens.breathLow.$value],
-    ["enterOffset", motionTokens.enterOffset.$value.value],
-    ["enterScale", motionTokens.enterScale.$value],
-    ["stagger", durationSeconds(motionTokens.stagger)],
-    ["pressScale", motionTokens.pressScale.$value],
-    ["pressOpacity", motionTokens.pressOpacity.$value],
+  // Verify every shared token output exists for iOS/macOS, Web CSS, and Android Kotlin consumers.
+  const artifacts = [
+    "Sources/MisotoMotion/GeneratedMotionTokens.swift",
+    "Sources/MisotoComponents/GeneratedTimingTokens.swift",
+    "tokens/dist/misoto-motion.css",
+    "tokens/dist/MisotoMotionTokens.kt",
+    "tokens/dist/misoto-timing.css",
+    "tokens/dist/MisotoTimingTokens.kt",
   ];
-  for (const [swiftProp, expected] of checks) {
-    const m = motionSwift.match(new RegExp(`public static let ${swiftProp}: [^=]+ = ([0-9.]+)`));
-    assert.ok(m, `Missing Motion.${swiftProp} in Motion.swift`);
-    assert.equal(Number(m[1]), expected, `Motion.${swiftProp} drifted from misoto-motion.tokens.json`);
+  for (const rel of artifacts) {
+    assert.ok(existsSync(join(root, rel)), `Missing generated SSOT artifact: ${rel}`);
   }
 });
 
-test("shared toast and loading timing tokens match Swift constants 1:1", () => {
-  const toastChecks = [
-    ["shortDuration", durationSeconds(timingTokens.toast.shortDuration)],
-    ["undoDuration", durationSeconds(timingTokens.toast.undoDuration)],
-    ["voiceOverDuration", durationSeconds(timingTokens.toast.voiceOverDuration)],
-  ];
-  for (const [prop, expected] of toastChecks) {
-    const m = toastSwift.match(new RegExp(`public static let ${prop}: TimeInterval = ([0-9.]+)`));
-    assert.ok(m, `Missing ToastTiming.${prop} in MisotoToast.swift`);
-    assert.equal(Number(m[1]), expected, `ToastTiming.${prop} drifted from misoto-timing.tokens.json`);
+test("generate-shared --check detects drift and fails", () => {
+  const cssPath = join(root, "tokens/dist/misoto-motion.css");
+  const original = readFileSync(cssPath, "utf8");
+  try {
+    writeFileSync(cssPath, original + "\n/* drift */\n");
+    assert.throws(() => execFileSync("node", [genScript, "--check"], { stdio: "pipe" }));
+  } finally {
+    writeFileSync(cssPath, original);
   }
-
-  const loadingChecks = [
-    ["placeholderDelay", durationSeconds(timingTokens.loading.placeholderDelay)],
-    ["minimumDisplay", durationSeconds(timingTokens.loading.minimumDisplay)],
-    ["slowThreshold", durationSeconds(timingTokens.loading.slowThreshold)],
-    ["timeout", durationSeconds(timingTokens.loading.timeout)],
-  ];
-  for (const [prop, expected] of loadingChecks) {
-    const m = loadingSwift.match(new RegExp(`public static let ${prop}: TimeInterval = ([0-9.]+)`));
-    assert.ok(m, `Missing LoadingTiming.${prop} in LoadingTiming.swift`);
-    assert.equal(Number(m[1]), expected, `LoadingTiming.${prop} drifted from misoto-timing.tokens.json`);
-  }
+  execFileSync("node", [genScript, "--check"], { stdio: "pipe" });
 });
 
 test("build.mjs emits Swift Theme, pure-JVM Kotlin, and CSS and passes --check", () => {
@@ -88,10 +59,8 @@ test("build.mjs emits Swift Theme, pure-JVM Kotlin, and CSS and passes --check",
   execFileSync("node", args, { encoding: "utf8" });
   assert.ok(existsSync(swiftOut) && existsSync(cssOut) && existsSync(ktOut));
 
-  // --check passes when up to date
   execFileSync("node", [...args, "--check"], { encoding: "utf8" });
 
-  // --check fails on drift
   writeFileSync(ktOut, readFileSync(ktOut, "utf8") + "\n// drifted\n");
   assert.throws(() => execFileSync("node", [...args, "--check"], { stdio: "pipe" }));
 });

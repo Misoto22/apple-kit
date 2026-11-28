@@ -46,14 +46,31 @@ public final class CoverWindow {
     private var takesKeyboard = false
     /// The app's key window before the cover took the keyboard.
     private weak var coveredKeyWindow: UIWindow?
-    private var backgroundObserver: (any NSObjectProtocol)?
+    nonisolated(unsafe) private var backgroundObserver: (any NSObjectProtocol)?
 
     public init(options: Options = .standard) {
         self.options = options
     }
 
+    deinit {
+        if let backgroundObserver {
+            NotificationCenter.default.removeObserver(backgroundObserver)
+        }
+    }
+
     /// Whether the window has been built on a scene.
     public var isAttached: Bool { window != nil }
+
+    /// Whether a scene background observer is currently registered.
+    public var hasBackgroundObserver: Bool { backgroundObserver != nil }
+
+    /// Removes any registered `UIScene.didEnterBackgroundNotification` observer.
+    public func removeBackgroundObserver() {
+        if let backgroundObserver {
+            NotificationCenter.default.removeObserver(backgroundObserver)
+            self.backgroundObserver = nil
+        }
+    }
 
     /// Builds the window on `scene`, once; later calls do nothing. Shows at once if ``show(takingKeyboard:)`` was called
     /// before the scene was known.
@@ -75,7 +92,7 @@ public final class CoverWindow {
     /// handler's isolation holds.
     public func onSceneDidEnterBackground(_ handler: @escaping @MainActor () -> Void) {
         guard let scene = window?.windowScene else { return }
-        if let backgroundObserver { NotificationCenter.default.removeObserver(backgroundObserver) }
+        removeBackgroundObserver()
         backgroundObserver = NotificationCenter.default.addObserver(
             forName: UIScene.didEnterBackgroundNotification,
             object: scene,

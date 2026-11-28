@@ -29,9 +29,13 @@ public final class RecordingKeychain: KeychainItems {
         self.inMemoryAccounts = inMemoryAccounts
     }
 
-    public func seed(account: String, value: String) {
+    public func seed(account: String, value: String, accessible: CFString? = nil) {
         accountRows[account] = Data(value.utf8)
-        rowAttributes[account] = [:]
+        var attrs: [String: Any] = [kSecAttrAccount as String: account]
+        if let accessible {
+            attrs[kSecAttrAccessible as String] = accessible as String
+        }
+        rowAttributes[account] = attrs
     }
 
     public func value(of account: String) -> String? {
@@ -45,14 +49,17 @@ public final class RecordingKeychain: KeychainItems {
     public func add(_ attributes: [String: Any]) -> OSStatus {
         added.append(attributes)
         if let forcedAddStatus { return forcedAddStatus }
-        if !addStatuses.isEmpty { return addStatuses.removeFirst() }
+        let scriptedStatus = addStatuses.isEmpty ? nil : addStatuses.removeFirst()
+        if let scriptedStatus, scriptedStatus != errSecSuccess {
+            return scriptedStatus
+        }
         if inMemoryAccounts {
             let account = attributes[kSecAttrAccount as String] as? String ?? ""
             guard accountRows[account] == nil else { return errSecDuplicateItem }
             accountRows[account] = attributes[kSecValueData as String] as? Data
             rowAttributes[account] = attributes
         }
-        return errSecSuccess
+        return scriptedStatus ?? errSecSuccess
     }
 
     public func copy(_ query: [String: Any]) -> (data: Data?, status: OSStatus) {
@@ -92,6 +99,21 @@ public final class RecordingKeychain: KeychainItems {
     }
 
     public func copyAttributes(_ query: [String: Any]) -> (items: [[String: Any]], status: OSStatus) {
-        (rows, errSecSuccess)
+        if inMemoryAccounts && rows.isEmpty {
+            let targetAccount = query[kSecAttrAccount as String] as? String
+            let targetService = query[kSecAttrService as String] as? String
+            let matched = rowAttributes.compactMap { account, attrs -> [String: Any]? in
+                if let targetAccount, account != targetAccount { return nil }
+                if let targetService,
+                   let storedService = attrs[kSecAttrService as String] as? String,
+                   storedService != targetService
+                {
+                    return nil
+                }
+                return attrs
+            }
+            return matched.isEmpty ? ([], errSecItemNotFound) : (matched, errSecSuccess)
+        }
+        return (rows, errSecSuccess)
     }
 }

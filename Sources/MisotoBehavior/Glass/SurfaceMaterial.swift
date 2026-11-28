@@ -1,6 +1,22 @@
 import MisotoTheme
 import SwiftUI
 
+extension EnvironmentValues {
+    /// Forces Reduce Transparency on below for deterministic gallery and snapshot verification.
+    @Entry public var forcesReduceTransparency: Bool = false
+}
+
+/// Whether transparency is reduced here: the system's setting, or `\.forcesReduceTransparency`.
+@propertyWrapper
+public struct ReduceTransparency: DynamicProperty {
+    @Environment(\.accessibilityReduceTransparency) private var system
+    @Environment(\.forcesReduceTransparency) private var forced
+
+    public init() {}
+
+    public var wrappedValue: Bool { system || forced }
+}
+
 /// The turn between Liquid Glass and an opaque surface: glass while a sheet or panel stands at a partial height, the
 /// app's paper (``Theme/paper``) at full height, and between them, as a finger drags it, the paper coming in over the
 /// glass with the lift.
@@ -40,15 +56,45 @@ public enum SurfaceMaterial {
     public static func fullTop(window: CGFloat) -> CGFloat { window * largeTopShare }
     public static let largeTopShare: CGFloat = 0.07
 
+    /// Whether the presentation sits centered rather than anchored to the bottom of a phone sheet.
+    /// Requires both `.regular` horizontal and `.regular` vertical size classes on iOS so landscape Pro Max iPhones
+    /// (`regular × compact`) keep sheet drag semantics.
+    public static func isCenteredSheet(
+        horizontal: UserInterfaceSizeClass?,
+        vertical: UserInterfaceSizeClass?
+    ) -> Bool {
+        #if os(iOS)
+        horizontal == .regular && vertical == .regular
+        #else
+        true
+        #endif
+    }
+
+    /// Whether the sheet configuration is always opaque paper regardless of drag lift.
+    public static func isAlwaysPaper(
+        detents: [PresentationDetent],
+        overSheet: Bool = false,
+        isCentered: Bool = false,
+        reduceTransparency: Bool = false
+    ) -> Bool {
+        reduceTransparency || isCentered || overSheet || detents == [.large]
+    }
+
     /// Whether a sheet at `selected` is paper outright: at `.large`, when `.large` is its only detent, when it stands
-    /// over another sheet (`overSheet`), or when presented as a centered sheet on iPad (`isCentered`).
+    /// over another sheet (`overSheet`), when presented centered (`isCentered`), or under Reduce Transparency.
     public static func isPaper(
         selected: PresentationDetent,
         detents: [PresentationDetent],
         overSheet: Bool = false,
-        isCentered: Bool = false
+        isCentered: Bool = false,
+        reduceTransparency: Bool = false
     ) -> Bool {
-        isCentered || overSheet || selected == .large || detents == [.large]
+        isAlwaysPaper(
+            detents: detents,
+            overSheet: overSheet,
+            isCentered: isCentered,
+            reduceTransparency: reduceTransparency
+        ) || selected == .large
     }
 }
 
@@ -65,7 +111,7 @@ public struct SurfaceMaterialBackground<S: InsettableShape>: View {
     public let lift: CGFloat
     public let shape: S
     @Environment(\.misotoTheme) private var theme
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @ReduceTransparency private var reduceTransparency
 
     public init(lift: CGFloat, in shape: S) {
         self.lift = lift
@@ -85,14 +131,15 @@ public struct SurfaceMaterialBackground<S: InsettableShape>: View {
 }
 
 /// A presented sheet's material and detents: glass at partial detents on compact phones, solid paper at `.large`,
-/// when stacked (`overSheet`), or when presented centered on iPad regular width.
+/// when stacked (`overSheet`), when presented centered on iPad regular width+height, or under Reduce Transparency.
 private struct SurfaceMaterialSheet: ViewModifier {
     let detents: [PresentationDetent]
     let external: Binding<PresentationDetent>?
     let overSheet: Bool
     @Environment(\.misotoTheme) private var theme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @ReduceTransparency private var reduceTransparency
     @State private var own: PresentationDetent
     @State private var lift: CGFloat = 0
     @State private var restTop: CGFloat?
@@ -106,14 +153,17 @@ private struct SurfaceMaterialSheet: ViewModifier {
     }
 
     private var selected: Binding<PresentationDetent> { external ?? $own }
-    private var isCenteredOnPad: Bool {
-        #if os(iOS)
-        horizontalSizeClass == .regular
-        #else
-        true
-        #endif
+    private var isCentered: Bool {
+        SurfaceMaterial.isCenteredSheet(horizontal: horizontalSizeClass, vertical: verticalSizeClass)
     }
-    private var paperOnly: Bool { reduceTransparency || isCenteredOnPad || overSheet || detents == [.large] }
+    private var paperOnly: Bool {
+        SurfaceMaterial.isAlwaysPaper(
+            detents: detents,
+            overSheet: overSheet,
+            isCentered: isCentered,
+            reduceTransparency: reduceTransparency
+        )
+    }
     private var rises: Bool { !paperOnly && detents.contains(.large) }
     private var paper: CGFloat { paperOnly ? 1 : rises ? SurfaceMaterial.paper(lift: lift) : 0 }
 

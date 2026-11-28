@@ -29,6 +29,32 @@ struct RelockPolicyTests {
         #expect(policy.isLocked)
     }
 
+    @Test func monotonicInstanceStateTracksGraceExpiryRollbackAndUnlock() {
+        let clock = ContinuousClock()
+        let t0 = clock.now
+        var policy = RelockPolicy(graceDuration: .seconds(60))
+
+        policy.didEnterBackground(at: t0)
+        #expect(policy.backgroundedInstant == t0)
+        let earlyLocked = policy.willEnterForeground(at: t0.advanced(by: .seconds(59)))
+        #expect(!earlyLocked)
+        #expect(!policy.isLocked)
+        #expect(policy.backgroundedInstant == nil)
+
+        policy.didEnterBackground(at: t0)
+        let expiredLocked = policy.willEnterForeground(at: t0.advanced(by: .seconds(60)))
+        #expect(expiredLocked)
+        #expect(policy.isLocked)
+
+        policy.unlock()
+        #expect(!policy.isLocked)
+
+        policy.didEnterBackground(at: t0)
+        let rollbackLocked = policy.willEnterForeground(at: t0.advanced(by: .seconds(-2)))
+        #expect(rollbackLocked)
+        #expect(policy.isLocked)
+    }
+
     @Test func timeIntervalEvaluatorHandlesBoundaryAndRollback() {
         #expect(RelockPolicy.shouldRelock(afterAway: 0, grace: 0))
         #expect(!RelockPolicy.shouldRelock(afterAway: 59.9, grace: 60))

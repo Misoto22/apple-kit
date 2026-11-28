@@ -4,7 +4,7 @@ import Testing
 @MainActor
 struct ToastCenterTests {
     @Test func queuesMessagesAppliesDurationsAndRunsUndo() {
-        let center = ToastCenter()
+        let center = ToastCenter(isVoiceOverRunning: { false })
         #expect(center.current == nil)
 
         var undone = false
@@ -28,6 +28,12 @@ struct ToastCenterTests {
 
         center.dismiss()
         #expect(center.current == nil)
+    }
+
+    @Test func readsVoiceOverStateAutomaticallyWhenCallerOmitsFlag() {
+        let center = ToastCenter(isVoiceOverRunning: { true })
+        center.show("Saved automatically")
+        #expect(center.current?.duration == ToastTiming.voiceOverDuration)
     }
 
     @Test func shortToastUsesThreeSecondDefault() {

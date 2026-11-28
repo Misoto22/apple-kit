@@ -1,4 +1,4 @@
-# Build and test AppleKit on the iOS Simulator, watchOS Simulator, and macOS host.
+# Build and test AppleKit on macOS, iPhone Simulator, iPad Simulator, Extension-safe iOS build, and watchOS Simulator.
 # The token pipeline (tokens/) is Node and runs on Linux.
 
 name: CI
@@ -26,11 +26,34 @@ jobs:
         run: xcodebuild -version && swift --version
       - name: Test on the macOS host
         run: swift test
-      - name: Test on the iOS Simulator, warnings as errors
+      - name: Test on iPhone Simulator, warnings as errors
         run: |
           xcodebuild test -scheme AppleKit-Package \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
             SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+      - name: Verify AppleLanguages switches Bundle.module localization on iOS Simulator
+        run: |
+          xcodebuild test -scheme AppleKit-Package \
+            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -only-testing:MisotoComponentsTests/LocalizationTests \
+            -only-testing:MisotoBehaviorTests/SurfaceMaterialTests \
+            -testLanguage ja -testRegion JP \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+      - name: Test on iPad Simulator, warnings as errors
+        run: |
+          IPAD_ID=$(xcrun simctl list devices available | grep -m1 'iPad' | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/')
+          echo "Testing on iPad simulator ID: $IPAD_ID"
+          xcodebuild test -scheme AppleKit-Package \
+            -destination "platform=iOS Simulator,id=$IPAD_ID" \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+      - name: Build Extension-safe products (APPLICATION_EXTENSION_API_ONLY=YES)
+        run: |
+          for scheme in MisotoFoundation MisotoTheme MisotoMotion MisotoLayout MisotoBehavior MisotoComponents; do
+            xcodebuild build -scheme "$scheme" \
+              -destination 'generic/platform=iOS Simulator' \
+              APPLICATION_EXTENSION_API_ONLY=YES \
+              SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+          done
       - name: Build watchOS-compatible products, warnings as errors
         run: |
           for scheme in MisotoFoundation MisotoTheme MisotoMotion MisotoLayout; do
@@ -52,4 +75,5 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
+      - run: node generate-shared.mjs --check
       - run: npm test

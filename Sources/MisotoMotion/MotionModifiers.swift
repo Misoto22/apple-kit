@@ -18,7 +18,7 @@ extension View {
         modifier(Breathing(active: active, low: low, still: still, delay: delay))
     }
 
-    /// Fades in and rises by ``Motion/enterOffset`` (`4 pt`), or fades in only under Reduce Motion.
+    /// Fades in and rises by ``Motion/enterOffset`` (`4 pt`), or crossfades on ``Motion/quick`` (`0.15 s`) only under Reduce Motion.
     public func stateRise(visible: Bool = true, delay: TimeInterval = 0) -> some View {
         modifier(StateRise(visible: visible, delay: delay))
     }
@@ -37,11 +37,6 @@ extension View {
     /// Numeric rolling transition gated by Reduce Motion.
     public func numericRoll() -> some View {
         modifier(NumericRoll())
-    }
-
-    /// Crossfades tab selection changes on ``Motion/quick`` (or ``Motion/fast`` under Reduce Motion).
-    public func fadingTabSwitches<Selection: Hashable>(selection: Selection) -> some View {
-        animation(Motion.quick, value: selection)
     }
 }
 
@@ -91,7 +86,7 @@ private struct StateRise: ViewModifier {
         content
             .opacity(visible ? 1 : 0)
             .offset(y: (visible || reduceMotion) ? 0 : Motion.enterOffset)
-            .animation(Motion.standard.delay(delay), value: visible)
+            .animation((reduceMotion ? Motion.quick : Motion.standard).delay(delay), value: visible)
     }
 }
 

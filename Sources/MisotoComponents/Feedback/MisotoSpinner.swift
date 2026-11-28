@@ -2,24 +2,36 @@ import MisotoMotion
 import MisotoTheme
 import SwiftUI
 
-/// Shared loading spinner whose structure, cadence, Reduce Motion still frame, and VoiceOver label stay uniform,
-/// while appearance switches among the three closed variants in `Theme.Variants.SpinnerStyle`.
+/// Shared loading spinner whose structure, cadence, Reduce Motion gentle opacity breath, and VoiceOver label stay
+/// uniform, while appearance switches among the three closed variants in `Theme.Variants.SpinnerStyle`.
 public struct MisotoSpinner: View {
     public var size: CGFloat
     public var lineWidth: CGFloat
+    public var variant: Theme.Variants.SpinnerStyle?
+    public var tint: Color?
 
     @Environment(\.misotoTheme) private var theme
     @ReduceMotion private var reduceMotion
     @State private var spinning = false
 
-    public init(size: CGFloat = 20, lineWidth: CGFloat = 2.5) {
+    public init(
+        size: CGFloat = 20,
+        lineWidth: CGFloat = 2.5,
+        variant: Theme.Variants.SpinnerStyle? = nil,
+        tint: Color? = nil
+    ) {
         self.size = size
         self.lineWidth = lineWidth
+        self.variant = variant
+        self.tint = tint
     }
+
+    private var resolvedVariant: Theme.Variants.SpinnerStyle { variant ?? theme.variants.spinner }
+    private var resolvedTint: Color { tint ?? theme.colors.accent }
 
     public var body: some View {
         Group {
-            switch theme.variants.spinner {
+            switch resolvedVariant {
             case .arc:
                 arcView
             case .enso:
@@ -42,20 +54,20 @@ public struct MisotoSpinner: View {
     private var arcView: some View {
         Circle()
             .trim(from: 0, to: 0.72)
-            .stroke(theme.colors.accent, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+            .stroke(resolvedTint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
             .rotationEffect(.degrees(spinning && !reduceMotion ? 360 : 0))
             .animation(
                 Motion.unless(reduceMotion, Motion.spin),
                 value: spinning
             )
-            .breathing(while: reduceMotion, low: 0.55, still: 0.75)
+            .modifier(ReducedMotionOpacityBreath(active: reduceMotion, low: 0.55))
     }
 
     private var ensoView: some View {
         Circle()
             .trim(from: 0.08, to: 0.92)
             .stroke(
-                theme.colors.accent,
+                resolvedTint,
                 style: StrokeStyle(lineWidth: lineWidth * 1.15, lineCap: .round)
             )
             .rotationEffect(.degrees(spinning && !reduceMotion ? 360 : -45))
@@ -63,17 +75,51 @@ public struct MisotoSpinner: View {
                 Motion.unless(reduceMotion, Motion.spinEnso),
                 value: spinning
             )
-            .breathing(while: reduceMotion, low: 0.6, still: 0.85)
+            .modifier(ReducedMotionOpacityBreath(active: reduceMotion, low: 0.6))
     }
 
     private var markPulseView: some View {
-        Circle()
-            .fill(theme.colors.accent)
-            .scaleEffect(reduceMotion ? 0.85 : (spinning ? 1.0 : 0.7))
-            .animation(
-                reduceMotion ? nil : Motion.breath.repeatForever(autoreverses: true),
-                value: spinning
-            )
-            .breathing(while: true, low: 0.45, still: 0.8)
+        ZStack {
+            Circle()
+                .strokeBorder(resolvedTint.opacity(0.35), lineWidth: lineWidth)
+                .scaleEffect(reduceMotion ? 1 : (spinning ? 1.0 : 0.78))
+            Circle()
+                .strokeBorder(resolvedTint, lineWidth: lineWidth)
+                .padding(size * 0.16)
+                .scaleEffect(reduceMotion ? 1 : (spinning ? 1.0 : 0.86))
+            Circle()
+                .fill(resolvedTint)
+                .frame(width: max(3, size * 0.28), height: max(3, size * 0.28))
+        }
+        .animation(
+            reduceMotion ? nil : Motion.breath.repeatForever(autoreverses: true),
+            value: spinning
+        )
+        .modifier(ReducedMotionOpacityBreath(active: reduceMotion, low: 0.55))
+    }
+}
+
+/// Opacity-only breath used specifically as the Reduce Motion fallback when orbital rotation is suppressed.
+private struct ReducedMotionOpacityBreath: ViewModifier {
+    let active: Bool
+    let low: Double
+    @State private var isLow = false
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(active && isLow ? low : 1)
+            .onAppear { update(active) }
+            .onChange(of: active) { _, now in update(now) }
+            .onDisappear { isLow = false }
+    }
+
+    private func update(_ on: Bool) {
+        guard on else {
+            withAnimation(Motion.standard) { isLow = false }
+            return
+        }
+        withAnimation(Motion.breath.repeatForever(autoreverses: true)) {
+            isLow = true
+        }
     }
 }

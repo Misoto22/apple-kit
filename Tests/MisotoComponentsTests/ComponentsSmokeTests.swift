@@ -12,8 +12,8 @@ struct ComponentsSmokeTests {
         for (name, theme) in BrandThemeFixtures.allBrands {
             let view = VStack {
                 Text(name)
-                    .misotoFont(\.headline)
-                    .foregroundStyle(.misotoInk)
+                    .font(theme.typography.headline.font)
+                    .foregroundStyle(theme.colors.ink)
                 MisotoSpinner()
                 MisotoProgress(value: 0.6)
                 Toggle("Enabled", isOn: .constant(true)).toggleStyle(.misoto)
@@ -36,9 +36,12 @@ struct ComponentsSmokeTests {
     }
 
     @Test func localizedStringsAreNonEmpty() {
-        #expect(!MisotoStrings.discardChangesTitle.isEmpty)
-        #expect(!MisotoStrings.discardChanges.isEmpty)
-        #expect(!MisotoStrings.keepEditing.isEmpty)
-        #expect(!MisotoStrings.item(1, of: 3).isEmpty)
+        #expect(!MisotoBehaviorStrings.discardChangesTitle.isEmpty)
+        #expect(!MisotoBehaviorStrings.discardChanges.isEmpty)
+        #expect(!MisotoBehaviorStrings.keepEditing.isEmpty)
+        #expect(!MisotoStrings.loading.isEmpty)
+        #expect(!MisotoStrings.toggleOn.isEmpty)
+        #expect(!MisotoStrings.toggleOff.isEmpty)
+        #expect(!MisotoStrings.undo.isEmpty)
     }
 }

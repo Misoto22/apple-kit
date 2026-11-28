@@ -30,7 +30,7 @@ private struct GlassSurfaceModifier<S: InsettableShape>: ViewModifier {
     let shape: S
     let interactive: Bool
     @Environment(\.misotoTheme) private var theme
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @ReduceTransparency private var reduceTransparency
 
     func body(content: Content) -> some View {
         if reduceTransparency {

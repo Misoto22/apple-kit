@@ -14,7 +14,7 @@ struct LocalizationTests {
         let data = try Data(contentsOf: catalogURL)
         let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
         let strings = try #require(json["strings"] as? [String: Any])
-        #expect(strings.count >= 11)
+        #expect(Set(strings.keys) == ["loading", "toggle_off", "toggle_on", "undo"])
 
         for (key, entryAny) in strings {
             let entry = try #require(entryAny as? [String: Any], "Missing entry for \(key)")
@@ -28,18 +28,62 @@ struct LocalizationTests {
         }
     }
 
-    @Test func bundleModuleStringsResolveNonEmpty() {
-        #expect(!MisotoStrings.undo.isEmpty)
-        #expect(!MisotoStrings.retry.isEmpty)
-        #expect(!MisotoStrings.cancel.isEmpty)
-        #expect(!MisotoStrings.save.isEmpty)
-        #expect(!MisotoStrings.close.isEmpty)
-        #expect(!MisotoStrings.clear.isEmpty)
-        #expect(!MisotoStrings.search.isEmpty)
+    @Test func bundleModuleStringsResolveNonEmptyAndLocalizeAllSixLanguages() throws {
         #expect(!MisotoStrings.loading.isEmpty)
-        #expect(!MisotoStrings.increment.isEmpty)
-        #expect(!MisotoStrings.decrement.isEmpty)
-        let formatted = MisotoStrings.item(2, of: 5)
-        #expect(formatted.contains("2") && formatted.contains("5"))
+        #expect(!MisotoStrings.toggleOn.isEmpty)
+        #expect(!MisotoStrings.toggleOff.isEmpty)
+        #expect(!MisotoStrings.undo.isEmpty)
+
+        var loadingByLocale: [String: String] = [:]
+        #if os(iOS)
+        for lang in requiredLanguages {
+            let lprojURL = try #require(
+                MisotoStrings.resourceBundle.url(forResource: lang, withExtension: "lproj"),
+                "Missing compiled .lproj bundle for \(lang)"
+            )
+            let langBundle = try #require(Bundle(url: lprojURL))
+            let resolved = langBundle.localizedString(forKey: "loading", value: nil, table: nil)
+            #expect(!resolved.isEmpty && resolved != "loading")
+            loadingByLocale[lang] = resolved
+        }
+        #else
+        if MisotoStrings.resourceBundle.url(forResource: "en", withExtension: "lproj") != nil {
+            for lang in requiredLanguages {
+                let lprojURL = try #require(
+                    MisotoStrings.resourceBundle.url(forResource: lang, withExtension: "lproj"),
+                    "Missing compiled .lproj bundle for \(lang)"
+                )
+                let langBundle = try #require(Bundle(url: lprojURL))
+                let resolved = langBundle.localizedString(forKey: "loading", value: nil, table: nil)
+                #expect(!resolved.isEmpty && resolved != "loading")
+                loadingByLocale[lang] = resolved
+            }
+        } else {
+            // Native SwiftPM CLI copies Localizable.xcstrings into Bundle.module without xcstringstool compilation.
+            let xcstringsURL = try #require(
+                MisotoStrings.resourceBundle.url(forResource: "Localizable", withExtension: "xcstrings"),
+                "Missing Localizable.xcstrings in Bundle.module"
+            )
+            let data = try Data(contentsOf: xcstringsURL)
+            let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+            let strings = try #require(json["strings"] as? [String: Any])
+            let loadingEntry = try #require(strings["loading"] as? [String: Any])
+            let localizations = try #require(loadingEntry["localizations"] as? [String: Any])
+            for lang in requiredLanguages {
+                let langEntry = try #require(localizations[lang] as? [String: Any], "Missing \(lang) in bundled xcstrings")
+                let unit = try #require(langEntry["stringUnit"] as? [String: Any])
+                let value = try #require(unit["value"] as? String)
+                #expect(!value.isEmpty)
+                loadingByLocale[lang] = value
+            }
+        }
+        #endif
+        #expect(Set(loadingByLocale.values).count == requiredLanguages.count)
+
+        let isJapanese = Locale.preferredLanguages.first?.hasPrefix("ja") == true
+            || UserDefaults.standard.stringArray(forKey: "AppleLanguages")?.first?.hasPrefix("ja") == true
+        if isJapanese {
+            #expect(MisotoStrings.loading == "読み込み中")
+        }
     }
 }
