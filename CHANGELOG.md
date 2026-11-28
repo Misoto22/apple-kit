@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Misoto22/apple-kit/compare/v0.2.0...v0.2.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* **components:** improve toggle a11y, spinner motion tokens, Dynamic Type icons, and sheet guard localization ([#9](https://github.com/Misoto22/apple-kit/issues/9)) ([574ded0](https://github.com/Misoto22/apple-kit/commit/574ded03f62540755f21e9b1520f2ce3967c6ee0))
+
 ## [0.2.0](https://github.com/Misoto22/apple-kit/compare/v0.1.0...v0.2.0) (2026-11-27)
 
 
