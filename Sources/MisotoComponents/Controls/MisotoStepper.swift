@@ -67,7 +67,7 @@ public struct MisotoStepper: View {
             adjust(by: delta)
         } label: {
             Image(systemName: systemImage)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.callout.weight(.semibold))
                 .foregroundStyle(enabled ? theme.colors.ink : theme.colors.tertiaryInk)
                 .frame(width: 36, height: 34)
         }

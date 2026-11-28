@@ -99,6 +99,8 @@ public enum Motion {
     public static let medium: TimeInterval = 0.20
     public static let slowDuration: TimeInterval = 0.30
     public static let breathDuration: TimeInterval = 0.80
+    public static let spinDuration: TimeInterval = 0.85
+    public static let spinEnsoDuration: TimeInterval = 1.10
     public static let breathLow: Double = 0.55
 
     public static let enterOffset: CGFloat = 4
@@ -120,6 +122,10 @@ public enum Motion {
     public static let emphasized = emphasizedCurve.animation(duration: slowDuration)
     /// Single cycle of a loading placeholder's breath.
     public static let breath = standardCurve.animation(duration: breathDuration)
+    /// Continuous linear rotation cycle for standard activity arcs.
+    public static let spin = Animation.linear(duration: spinDuration).repeatForever(autoreverses: false)
+    /// Continuous linear rotation cycle for calligraphy enso activity indicators.
+    public static let spinEnso = Animation.linear(duration: spinEnsoDuration).repeatForever(autoreverses: false)
 
     /// `animation`, or `nil` when system Reduce Motion is on.
     @MainActor
