@@ -1,5 +1,6 @@
 import Foundation
 @testable import MisotoFoundation
+import MisotoTesting
 import Security
 import Testing
 
@@ -145,5 +146,27 @@ struct GenericPasswordTests {
     @Test func notFoundCountsAsNothingLeft() {
         #expect(KeychainStatus.isSuccessOrNotFound(errSecItemNotFound))
         #expect(!KeychainStatus.isSuccessOrNotFound(errSecInteractionNotAllowed))
+    }
+
+    @Test func recordingKeychainSupportsPerAccountStorageAndForcedStatuses() {
+        let keychain = RecordingKeychain(inMemoryAccounts: true)
+        keychain.seed(account: "alpha", value: "v1")
+        #expect(keychain.value(of: "alpha") == "v1")
+
+        let item = GenericPassword(service: "s", account: "alpha")
+        #expect(item.readString(in: keychain) == "v1")
+        #expect(item.upsert(Data("v2".utf8), accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly, updatesAccessibility: true, in: keychain) == errSecSuccess)
+        #expect(keychain.value(of: "alpha") == "v2")
+        #expect(keychain.accessibility(of: "alpha") == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly as String)
+
+        keychain.forcedUpdateStatus = errSecInteractionNotAllowed
+        #expect(keychain.update([kSecAttrAccount as String: "alpha"], [:]) == errSecInteractionNotAllowed)
+        keychain.forcedUpdateStatus = nil
+
+        let beta = GenericPassword(service: "s", account: "beta")
+        #expect(beta.upsert(Data("b1".utf8), accessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly, updatesAccessibility: true, in: keychain) == errSecSuccess)
+        #expect(keychain.value(of: "beta") == "b1")
+        #expect(keychain.delete([kSecAttrAccount as String: "beta"]) == errSecSuccess)
+        #expect(keychain.value(of: "beta") == nil)
     }
 }

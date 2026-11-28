@@ -61,4 +61,41 @@ struct RateLimitRetryTests {
         #expect(calls.withLock { $0 } == 1)
         #expect(!slept.withLock { $0 })
     }
+
+    @Test func supportsGenericPayloadWithFallbackAndCappedDelay() async throws {
+        var calls = 0
+        var slept: [TimeInterval] = []
+        let urlResponse: URLResponse = response(status: 429)
+        let okResponse: URLResponse = response(status: 200)
+
+        let (text, secondResponse) = try await RateLimitRetry.perform(
+            maxDelay: 65,
+            fallbackDelay: 2,
+            capDelay: true,
+            sleep: { slept.append($0) }
+        ) {
+            calls += 1
+            if calls == 1 {
+                return ("limited", urlResponse)
+            }
+            return ("ok", okResponse)
+        }
+        #expect(text == "ok")
+        #expect((secondResponse as? HTTPURLResponse)?.statusCode == 200)
+        #expect(slept == [2])
+
+        var cappedSleep: [TimeInterval] = []
+        calls = 0
+        _ = try await RateLimitRetry.perform(
+            maxDelay: 65,
+            fallbackDelay: 2,
+            capDelay: true,
+            sleep: { cappedSleep.append($0) }
+        ) {
+            calls += 1
+            return (calls, response(status: 429, retryAfter: "600") as URLResponse)
+        }
+        #expect(cappedSleep == [65])
+        #expect(calls == 2)
+    }
 }
