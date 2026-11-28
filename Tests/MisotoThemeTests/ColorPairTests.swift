@@ -72,9 +72,9 @@ struct ThemeTests {
         #expect(values.misotoTheme.radii == Theme.system.radii)
         #expect(values.misotoTheme.variants == Theme.system.variants)
         values.misotoTheme.colors.accent = .red
-        values.misotoTheme.variants.card = .glass
+        values.misotoTheme.variants.spinner = .enso
         #expect(values.misotoTheme.accent == .red)
-        #expect(values.misotoTheme.variants.card == .glass)
+        #expect(values.misotoTheme.variants.spinner == .enso)
     }
 
     @Test func shadowPairResolvesByColorScheme() {

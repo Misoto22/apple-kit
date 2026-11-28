@@ -12,11 +12,7 @@ public struct MisotoGalleryView: View {
     @State private var isDark = false
     @State private var useLargestText = false
     @State private var forceReduceMotion = false
-    @State private var segment = "One"
     @State private var toggleOn = true
-    @State private var stepperValue = 2
-    @State private var fieldText = "Sample input"
-    @State private var searchText = ""
 
     public init() {}
 
@@ -31,11 +27,7 @@ public struct MisotoGalleryView: View {
                     controlsCard
                     MisotoGalleryShowcase(
                         brandName: activeBrand.name,
-                        segment: $segment,
-                        toggleOn: $toggleOn,
-                        stepperValue: $stepperValue,
-                        fieldText: $fieldText,
-                        searchText: $searchText
+                        toggleOn: $toggleOn
                     )
                 }
                 .padding(16)
@@ -51,111 +43,118 @@ public struct MisotoGalleryView: View {
     }
 
     private var controlsCard: some View {
-        MisotoCard {
-            VStack(alignment: .leading, spacing: 12) {
-                MisotoSegmentedControl(
-                    options: Array(BrandThemeFixtures.allBrands.indices),
-                    selection: $selectedBrandIndex,
-                    title: { BrandThemeFixtures.allBrands[$0].name }
-                )
-                Toggle("Dark Appearance", isOn: $isDark).toggleStyle(.misoto)
-                Toggle("Accessibility Text Size", isOn: $useLargestText).toggleStyle(.misoto)
-                Toggle("Force Reduce Motion", isOn: $forceReduceMotion).toggleStyle(.misoto)
+        VStack(alignment: .leading, spacing: 12) {
+            Picker("Brand", selection: $selectedBrandIndex) {
+                ForEach(BrandThemeFixtures.allBrands.indices, id: \.self) { index in
+                    Text(BrandThemeFixtures.allBrands[index].name).tag(index)
+                }
             }
+            .pickerStyle(.segmented)
+            Toggle("Dark Appearance", isOn: $isDark).toggleStyle(.misoto)
+            Toggle("Accessibility Text Size", isOn: $useLargestText).toggleStyle(.misoto)
+            Toggle("Force Reduce Motion", isOn: $forceReduceMotion).toggleStyle(.misoto)
         }
+        .padding(16)
+        .background(.misotoSurface, in: RoundedRectangle(cornerRadius: activeBrand.theme.radii.card, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: activeBrand.theme.radii.card, style: .continuous)
+                .strokeBorder(activeBrand.theme.colors.hairline, lineWidth: activeBrand.theme.elevation.strokeWidth)
+        )
     }
 }
 
-/// Deterministic showcase of all 19 shared component categories, layout primitives, and glass surfaces.
+/// Deterministic showcase of retained shared primitives, layout rules, and glass surfaces.
 public struct MisotoGalleryShowcase: View {
     public let brandName: String
-    @Binding public var segment: String
     @Binding public var toggleOn: Bool
-    @Binding public var stepperValue: Int
-    @Binding public var fieldText: String
-    @Binding public var searchText: String
 
     @Environment(\.misotoTheme) private var theme
 
     public init(
         brandName: String,
-        segment: Binding<String> = .constant("One"),
-        toggleOn: Binding<Bool> = .constant(true),
-        stepperValue: Binding<Int> = .constant(2),
-        fieldText: Binding<String> = .constant("Sample"),
-        searchText: Binding<String> = .constant("")
+        toggleOn: Binding<Bool> = .constant(true)
     ) {
         self.brandName = brandName
-        self._segment = segment
         self._toggleOn = toggleOn
-        self._stepperValue = stepperValue
-        self._fieldText = fieldText
-        self._searchText = searchText
     }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: theme.spacing.md) {
-            Text(brandName)
-                .misotoFont(\.title)
-                .foregroundStyle(.misotoInk)
-
-            // Batch 1: Status & Feedback
-            MisotoCard {
-                VStack(alignment: .leading, spacing: theme.spacing.sm) {
-                    HStack(spacing: theme.spacing.md) {
-                        MisotoSpinner()
-                        MisotoProgress(value: 0.65)
-                    }
-                    MisotoSkeletonRow()
-                    MisotoBanner(tone: .info, title: "Unified Tokens", message: "SSOT variables resolved from Theme.")
-                    MisotoToastCapsule(message: ToastMessage(text: "Saved changes", undo: {}), onUndo: {})
-                    MisotoEmptyState(systemImage: "sparkles", title: "Empty State", message: "Shared across 4 brands", placement: .inline)
-                    MisotoErrorState(title: "Sync Paused", message: "Retry available", severity: .warning, placement: .inline, retry: {})
-                }
-            }
-
-            // Batch 2: Controls & Layout
-            MisotoCard {
-                VStack(alignment: .leading, spacing: theme.spacing.sm) {
-                    EqualWidthRow {
-                        Button("Primary") {}.buttonStyle(.misotoPrimary)
-                        Button("Secondary") {}.buttonStyle(.misotoSecondary)
-                    }
-                    HStack(spacing: theme.spacing.sm) {
-                        Button {} label: { Image(systemName: "xmark") }.buttonStyle(.misotoIcon)
-                        Button("Text Action") {}.buttonStyle(.misotoText)
-                        MisotoBusyButton("Busy", isBusy: false) {}
-                    }
-                    FlowLayout(spacing: theme.spacing.xs, lineSpacing: theme.spacing.xs) {
-                        MisotoChip("Selected", systemImage: "checkmark", isSelected: true) {}
-                        MisotoChip("Paper / Glass", isSelected: false) {}
-                        MisotoChip("Tag")
-                    }
-                    Toggle("Switch / Check Variant", isOn: $toggleOn).toggleStyle(.misoto)
-                    MisotoSegmentedControl(options: ["One", "Two", "Three"], selection: $segment, title: { $0 })
-                    MisotoStepper("Count", value: $stepperValue, in: 0...10)
-                    MisotoTextField("Field", text: $fieldText)
-                    MisotoSearchField(text: $searchText)
-                }
-            }
-
-            // Batch 3: Atomic Setting Row & Sheet Header
-            MisotoCard {
-                VStack(spacing: theme.spacing.xs) {
-                    MisotoSheetHeader("Sheet Title", onCancel: {}, onSave: {})
-                    MisotoSettingRow("Appearance", subtitle: LocalizedStringKey(brandName), systemImage: "paintbrush")
-                }
-            }
-
-            // Liquid Glass surface sample
-            HStack {
-                Text("SurfaceMaterialBackground")
-                    .misotoFont(\.callout)
+            VStack(alignment: .leading, spacing: theme.spacing.xs) {
+                Text(brandName)
+                    .misotoFont(\.title)
                     .foregroundStyle(.misotoInk)
-                    .padding(theme.spacing.md)
+                Text("Unified Primitives & Liquid Glass")
+                    .misotoFont(\.caption)
+                    .foregroundStyle(theme.colors.secondaryInk)
             }
-            .frame(maxWidth: .infinity)
+
+            // Shared primitives with closed variants
+            VStack(alignment: .leading, spacing: theme.spacing.sm) {
+                HStack(spacing: theme.spacing.md) {
+                    MisotoSpinner()
+                    MisotoProgress(value: 0.65)
+                }
+                Toggle("Shared Toggle Variant", isOn: $toggleOn)
+                    .toggleStyle(.misoto)
+            }
+            .padding(theme.spacing.md)
+            .background(theme.colors.surface, in: RoundedRectangle(cornerRadius: theme.radii.card, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.radii.card, style: .continuous)
+                    .strokeBorder(theme.colors.hairline, lineWidth: theme.elevation.strokeWidth)
+            )
+
+            // Layout primitives
+            VStack(alignment: .leading, spacing: theme.spacing.sm) {
+                EqualWidthRow(spacing: theme.spacing.sm) {
+                    Text("Primary")
+                        .misotoFont(\.callout)
+                        .foregroundStyle(theme.colors.onAccent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacing.sm)
+                        .background(theme.colors.accent, in: Capsule())
+                    Text("Secondary")
+                        .misotoFont(\.callout)
+                        .foregroundStyle(theme.colors.ink)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, theme.spacing.sm)
+                        .background(theme.colors.surface, in: Capsule())
+                        .overlay(Capsule().strokeBorder(theme.colors.hairline, lineWidth: theme.elevation.strokeWidth))
+                }
+                FlowLayout(spacing: theme.spacing.xs, lineSpacing: theme.spacing.xs, balancesRows: true) {
+                    ForEach(["Balanced", "Flow", "Layout", "Tokens"], id: \.self) { label in
+                        Text(label)
+                            .misotoFont(\.caption)
+                            .foregroundStyle(theme.colors.ink)
+                            .padding(.horizontal, theme.spacing.sm)
+                            .padding(.vertical, theme.spacing.xs)
+                            .background(theme.colors.surface, in: Capsule())
+                            .overlay(Capsule().strokeBorder(theme.colors.hairline, lineWidth: theme.elevation.strokeWidth))
+                    }
+                }
+            }
+            .padding(theme.spacing.md)
+            .background(theme.colors.surface, in: RoundedRectangle(cornerRadius: theme.radii.card, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.radii.card, style: .continuous)
+                    .strokeBorder(theme.colors.hairline, lineWidth: theme.elevation.strokeWidth)
+            )
+
+            // Liquid Glass & GlassInk surface sample (responds to Reduce Transparency)
+            VStack(alignment: .leading, spacing: theme.spacing.xs) {
+                Text("SurfaceMaterial & GlassInk")
+                    .misotoFont(\.headline)
+                    .foregroundStyle(GlassInkStyle(plain: theme.colors.ink, glass: theme.colors.glass.secondaryInk))
+                Text("Adapts cleanly under Reduce Transparency & High Contrast")
+                    .misotoFont(\.caption)
+                    .foregroundStyle(GlassInkStyle(plain: theme.colors.secondaryInk, glass: theme.colors.glass.tertiaryInk))
+            }
+            .padding(theme.spacing.md)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(GlassFill.wash(in: theme), in: RoundedRectangle(cornerRadius: theme.radii.card, style: .continuous))
             .background(SurfaceMaterialBackground(lift: 0.35, in: RoundedRectangle(cornerRadius: theme.radii.card, style: .continuous)))
+            .environment(\.standsOnGlass, true)
         }
     }
 }

@@ -175,66 +175,22 @@ public struct Theme: Sendable {
 
     /// Closed value-type variants (at most 3 cases per component) injected once via `Theme` and overridable locally.
     public struct Variants: Sendable, Hashable {
-        public enum ButtonShape: Sendable, Hashable { case capsule, roundedRect }
-        public enum ButtonFill: Sendable, Hashable { case solid, glass }
-        public enum IconButtonSurface: Sendable, Hashable { case glassCircle, paperCircle }
-        public enum TextButtonFeedback: Sendable, Hashable { case dim, wash }
-        public enum ChipSurface: Sendable, Hashable { case paper, glass }
-        public enum CardStyle: Sendable, Hashable { case outlined, filled, glass }
-        public enum EmptyStateStyle: Sendable, Hashable { case symbol, illustrated }
         public enum SpinnerStyle: Sendable, Hashable { case arc, enso, markPulse }
         public enum ProgressStyle: Sendable, Hashable { case ring, bar }
-        public enum SegmentedTrack: Sendable, Hashable { case glass, solid }
         public enum ToggleVariant: Sendable, Hashable { case `switch`, check }
-        public enum FieldStyle: Sendable, Hashable { case outlined, filled }
-        public enum ToastSurface: Sendable, Hashable { case glass, paper }
-        public enum SettingRowStyle: Sendable, Hashable { case card, plain }
 
-        public var buttonShape: ButtonShape
-        public var buttonFill: ButtonFill
-        public var iconButtonSurface: IconButtonSurface
-        public var textButtonFeedback: TextButtonFeedback
-        public var chipSurface: ChipSurface
-        public var card: CardStyle
-        public var emptyState: EmptyStateStyle
         public var spinner: SpinnerStyle
         public var progress: ProgressStyle
-        public var segmentedTrack: SegmentedTrack
         public var toggle: ToggleVariant
-        public var field: FieldStyle
-        public var toast: ToastSurface
-        public var settingRow: SettingRowStyle
 
         public init(
-            buttonShape: ButtonShape = .capsule,
-            buttonFill: ButtonFill = .solid,
-            iconButtonSurface: IconButtonSurface = .glassCircle,
-            textButtonFeedback: TextButtonFeedback = .dim,
-            chipSurface: ChipSurface = .paper,
-            card: CardStyle = .outlined,
-            emptyState: EmptyStateStyle = .symbol,
             spinner: SpinnerStyle = .arc,
             progress: ProgressStyle = .ring,
-            segmentedTrack: SegmentedTrack = .glass,
-            toggle: ToggleVariant = .switch,
-            field: FieldStyle = .outlined,
-            toast: ToastSurface = .glass,
-            settingRow: SettingRowStyle = .card
+            toggle: ToggleVariant = .switch
         ) {
-            self.buttonShape = buttonShape
-            self.buttonFill = buttonFill
-            self.iconButtonSurface = iconButtonSurface
-            self.textButtonFeedback = textButtonFeedback
-            self.chipSurface = chipSurface
-            self.card = card
-            self.emptyState = emptyState
             self.spinner = spinner
             self.progress = progress
-            self.segmentedTrack = segmentedTrack
             self.toggle = toggle
-            self.field = field
-            self.toast = toast
-            self.settingRow = settingRow
         }
 
         public static let system = Variants()

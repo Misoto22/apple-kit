@@ -1,9 +1,5 @@
 import Foundation
-import MisotoBehavior
-import MisotoMotion
-import MisotoTheme
 import Observation
-import SwiftUI
 
 /// Timing constants matching `tokens/shared/misoto-timing.tokens.json`.
 public enum ToastTiming {
@@ -118,63 +114,6 @@ public final class ToastCenter {
             try? await Task.sleep(for: .seconds(duration))
             guard !Task.isCancelled, let self, self.current?.id == id else { return }
             self.dismiss()
-        }
-    }
-}
-
-/// Shared capsule toast view switching between `.glass` and `.paper` via `Theme.Variants.ToastSurface`.
-public struct MisotoToastCapsule: View {
-    private let message: ToastMessage
-    private let onUndo: () -> Void
-    private let onHoverOrTouch: (Bool) -> Void
-
-    @Environment(\.misotoTheme) private var theme
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-
-    public init(
-        message: ToastMessage,
-        onUndo: @escaping () -> Void,
-        onHoverOrTouch: @escaping (Bool) -> Void = { _ in }
-    ) {
-        self.message = message
-        self.onUndo = onUndo
-        self.onHoverOrTouch = onHoverOrTouch
-    }
-
-    public var body: some View {
-        HStack(spacing: theme.spacing.sm) {
-            if let systemImage = message.systemImage {
-                Image(systemName: systemImage)
-                    .foregroundStyle(theme.colors.accent)
-                    .accessibilityHidden(true)
-            }
-            Text(message.text)
-                .font(theme.typography.callout.font)
-                .foregroundStyle(theme.colors.ink)
-            if message.undoHandler != nil {
-                Button(MisotoStrings.undo, action: onUndo)
-                    .font(theme.typography.headline.font)
-                    .foregroundStyle(theme.colors.accent)
-            }
-        }
-        .padding(.horizontal, theme.spacing.md)
-        .padding(.vertical, theme.spacing.sm + 2)
-        .modifier(ToastSurfaceModifier(reduceTransparency: reduceTransparency))
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: onHoverOrTouch) {}
-    }
-}
-
-private struct ToastSurfaceModifier: ViewModifier {
-    let reduceTransparency: Bool
-    @Environment(\.misotoTheme) private var theme
-
-    @ViewBuilder func body(content: Content) -> some View {
-        if theme.variants.toast == .glass && !reduceTransparency {
-            content.glassSurface(in: Capsule())
-        } else {
-            content
-                .background(theme.colors.surface, in: Capsule())
-                .overlay(Capsule().strokeBorder(theme.colors.hairline, lineWidth: theme.elevation.strokeWidth))
         }
     }
 }

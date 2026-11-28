@@ -53,7 +53,11 @@ let package = Package(
         .testTarget(name: "MisotoMotionTests", dependencies: ["MisotoMotion"]),
         .testTarget(name: "MisotoLayoutTests", dependencies: ["MisotoLayout"]),
         .testTarget(name: "MisotoBehaviorTests", dependencies: ["MisotoBehavior", "MisotoTheme", "MisotoMotion"]),
-        .testTarget(name: "MisotoComponentsTests", dependencies: ["MisotoComponents", "MisotoGallery", "MisotoTesting"]),
+        .testTarget(
+            name: "MisotoComponentsTests",
+            dependencies: ["MisotoComponents", "MisotoGallery", "MisotoTesting"],
+            exclude: ["__Snapshots__"]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )
