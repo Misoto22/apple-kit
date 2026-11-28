@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/Misoto22/apple-kit/compare/v0.2.2...v0.3.0) (2026-11-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* Removes 14 uncalled MisotoComponents visual shells, MisotoToastCapsule, ZoomablePhotoView, SemanticVersion, and unused Theme.Variants properties.
+
+### Refactoring
+
+* prune unshared visual shells and focus MisotoComponents on adopted primitives ([#13](https://github.com/Misoto22/apple-kit/issues/13)) ([ff6dc31](https://github.com/Misoto22/apple-kit/commit/ff6dc31c1b3dc708ad9b70b729452b7dd6e6467f))
+
 ## [0.2.2](https://github.com/Misoto22/apple-kit/compare/v0.2.1...v0.2.2) (2026-11-28)
 
 
