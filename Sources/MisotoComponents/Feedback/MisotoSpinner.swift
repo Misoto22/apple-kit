@@ -45,7 +45,7 @@ public struct MisotoSpinner: View {
             .stroke(theme.colors.accent, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
             .rotationEffect(.degrees(spinning && !reduceMotion ? 360 : 0))
             .animation(
-                reduceMotion ? nil : .linear(duration: 0.85).repeatForever(autoreverses: false),
+                Motion.unless(reduceMotion, Motion.spin),
                 value: spinning
             )
             .breathing(while: reduceMotion, low: 0.55, still: 0.75)
@@ -60,7 +60,7 @@ public struct MisotoSpinner: View {
             )
             .rotationEffect(.degrees(spinning && !reduceMotion ? 360 : -45))
             .animation(
-                reduceMotion ? nil : .linear(duration: 1.1).repeatForever(autoreverses: false),
+                Motion.unless(reduceMotion, Motion.spinEnso),
                 value: spinning
             )
             .breathing(while: reduceMotion, low: 0.6, still: 0.85)
@@ -70,6 +70,10 @@ public struct MisotoSpinner: View {
         Circle()
             .fill(theme.colors.accent)
             .scaleEffect(reduceMotion ? 0.85 : (spinning ? 1.0 : 0.7))
+            .animation(
+                reduceMotion ? nil : Motion.breath.repeatForever(autoreverses: true),
+                value: spinning
+            )
             .breathing(while: true, low: 0.45, still: 0.8)
     }
 }

@@ -48,7 +48,7 @@ public struct MisotoErrorState: View {
     public var body: some View {
         VStack(spacing: theme.spacing.md) {
             Image(systemName: iconName)
-                .font(.system(size: placement == .fullScreen ? 36 : 24, weight: .medium))
+                .font(placement == .fullScreen ? .largeTitle.weight(.medium) : .title2.weight(.medium))
                 .foregroundStyle(iconColor)
                 .accessibilityHidden(true)
 

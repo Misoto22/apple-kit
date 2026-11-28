@@ -7,7 +7,10 @@ public enum MisotoStrings {
     public static var clear: String { String(localized: "clear", defaultValue: "Clear", bundle: .module) }
     public static var close: String { String(localized: "close", defaultValue: "Close", bundle: .module) }
     public static var decrement: String { String(localized: "decrement", defaultValue: "Decrease", bundle: .module) }
+    public static var discardChanges: String { String(localized: "discard_changes", defaultValue: "Discard Changes", bundle: .module) }
+    public static var discardChangesTitle: String { String(localized: "discard_changes_title", defaultValue: "Discard changes?", bundle: .module) }
     public static var increment: String { String(localized: "increment", defaultValue: "Increase", bundle: .module) }
+    public static var keepEditing: String { String(localized: "keep_editing", defaultValue: "Keep Editing", bundle: .module) }
     public static var loading: String { String(localized: "loading", defaultValue: "Loading", bundle: .module) }
     public static var retry: String { String(localized: "retry", defaultValue: "Retry", bundle: .module) }
     public static var save: String { String(localized: "save", defaultValue: "Save", bundle: .module) }

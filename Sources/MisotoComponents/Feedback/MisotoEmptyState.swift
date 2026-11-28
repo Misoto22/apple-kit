@@ -42,7 +42,7 @@ public struct MisotoEmptyState<Artwork: View>: View {
                 switch theme.variants.emptyState {
                 case .symbol:
                     Image(systemName: systemImage)
-                        .font(.system(size: placement == .fullScreen ? 38 : 26, weight: .regular))
+                        .font(placement == .fullScreen ? .largeTitle : .title2)
                         .foregroundStyle(theme.colors.secondaryInk)
                 case .illustrated:
                     artwork

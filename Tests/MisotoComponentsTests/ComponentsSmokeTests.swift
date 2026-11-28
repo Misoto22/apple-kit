@@ -35,4 +35,11 @@ struct ComponentsSmokeTests {
             #expect(renderer.cgImage != nil)
         }
     }
+
+    @Test func localizedStringsAreNonEmpty() {
+        #expect(!MisotoStrings.discardChangesTitle.isEmpty)
+        #expect(!MisotoStrings.discardChanges.isEmpty)
+        #expect(!MisotoStrings.keepEditing.isEmpty)
+        #expect(!MisotoStrings.item(1, of: 3).isEmpty)
+    }
 }

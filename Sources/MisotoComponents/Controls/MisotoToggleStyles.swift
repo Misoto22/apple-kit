@@ -17,20 +17,22 @@ public struct MisotoToggleStyle: ToggleStyle {
         @ReduceMotion private var reduceMotion
 
         var body: some View {
-            HStack {
-                configuration.label
-                    .font(theme.typography.body.font)
-                    .foregroundStyle(theme.colors.ink)
-                Spacer(minLength: theme.spacing.sm)
-                control
-            }
-            .contentShape(.rect)
-            .onTapGesture {
+            Button {
                 withAnimation(Motion.unless(reduceMotion, Motion.snappy)) {
                     configuration.isOn.toggle()
                 }
+            } label: {
+                HStack {
+                    configuration.label
+                        .font(theme.typography.body.font)
+                        .foregroundStyle(theme.colors.ink)
+                    Spacer(minLength: theme.spacing.sm)
+                    control
+                }
+                .contentShape(.rect)
             }
-            .accessibilityAddTraits(.isButton)
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(.isToggle)
         }
 
         @ViewBuilder
@@ -58,7 +60,7 @@ public struct MisotoToggleStyle: ToggleStyle {
                         )
                     if configuration.isOn {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.caption.weight(.bold))
                             .foregroundStyle(theme.colors.onAccent)
                     }
                 }
